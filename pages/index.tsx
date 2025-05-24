@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleGenAI } from "@google/genai";
 
 // Helper to convert base64 to Blob URL
@@ -207,7 +206,6 @@ export default function TheCVComedyPodcast() {
   const [podcastScript, setPodcastScript] = useState<string>("");
   const [audioBuffer, setAudioBuffer] = useState<Blob | null>(null);
   const [isExtracting, setIsExtracting] = useState<boolean>(false);
-  let [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [debugLog, setDebugLog] = useState<string[]>([]);
@@ -250,25 +248,10 @@ export default function TheCVComedyPodcast() {
         "[Episodio de prueba]\nAlex: Bienvenidos a The CV Comedy Podcast.\nSam: Hoy solo estamos probando el visualizador de audio.\n[...]"
       );
       setManualText(mockCvSummary); // Mostrar el mock summary en el área manual
-      // Solo cargar audio si aún no está cargado
-      if (!audioBuffer) {
-        (async () => {
-          try {
-            const response = await fetch(
-              "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-            );
-            const blob = await response.blob();
-            setAudioBuffer(blob);
-          } catch (e) {
-            setError("No se pudo cargar el audio de prueba");
-          }
-        })();
-      }
     }
   }, [devMode]);
   // --- Fin modo dev ---
 
-  isGenerating ||= isGeneratingScript || isGeneratingAudio;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -296,18 +279,6 @@ export default function TheCVComedyPodcast() {
     setDragActive(false);
     const files = e.dataTransfer.files;
     handleFileUpload(files[0]);
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(",")[1]);
-      };
-      reader.onerror = (error) => reject(error);
-    });
   };
 
   const handleFileUpload = async (uploadedFile: File) => {
@@ -340,7 +311,6 @@ export default function TheCVComedyPodcast() {
               .join(" ");
             fullText += pageText + "\n";
           }
-          console.log(fullText);
           fullText = fullText.trim();
           if (fullText.length > 0) {
             setManualText(fullText);
@@ -394,19 +364,20 @@ export default function TheCVComedyPodcast() {
       return;
     }
 
-    setIsGeneratingScript(true);
     setError("");
     setPodcastScript("");
+    setIsGeneratingScript(true);
+    setIsGeneratingAudio(true);
 
     try {
       addLog("Inicializando GoogleGenerativeAI...");
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const ai = new GoogleGenAI({ apiKey });
 
       // Generate script with Gemini 2.0 Flash
-      addLog("Generando episodio con Gemini 2.0 Flash...");
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash-preview-05-20",
-      });
+      addLog("Generando episodio con Gemini...");
+      // const model = genAI.getGenerativeModel({
+      //   model: "gemini-2.5-flash-preview-05-20",
+      // });
 
       const scriptPrompt = `Bienvenido a The CV Comedy Podcast. Cada CV es un nuevo episodio. Eres un dúo de comediantes profesionales especializados en crear contenido humorístico inteligente para podcasts. Crea el libreto para un episodio de 4-6 minutos que critique de manera divertida y sarcástica un CV (el CV es el invitado del episodio).
 
@@ -438,19 +409,30 @@ IMPORTANTE:
 
 Analiza este CV y crea el libreto del episodio en español, y bastante bastante crítico (literalmente un roast sin piedad):`;
 
-      addLog("Enviando solicitud para generar episodio...");
-      const parts = [`${scriptPrompt}\n\n${textToAnalyze}`];
-      const result = await model.generateContent(parts);
+      let script = "";
+      if (devMode) {
+        script = manualText;
+      } else {
+        addLog("Enviando solicitud para generar episodio...");
+        const parts = [`${scriptPrompt}\n\n${textToAnalyze}`];
+        const result = await ai.models.generateContentStream({
+          model: "gemini-2.5-flash-preview-05-20",
+          contents: parts,
+        });
 
-      const response = result.response;
-      const script = response.text();
-      if (!script) throw new Error("No se pudo generar el episodio");
+        for await (const chunk of result) {
+          const text = chunk.text || "";
+          setPodcastScript((prev) => prev + text); // Actualizar el script en tiempo real
+          script += text;
+        }
+      }
+
       addLog(`Episodio generado: ${script.substring(0, 100)}...`);
+
       setPodcastScript(script);
       setIsGeneratingScript(false);
 
       // Generar audio usando Web Speech API
-      setIsGeneratingAudio(true);
       addLog("Generando audio usando Web Speech API...");
       // Usar el episodio generado como prompt para TTS
       const ttsPrompt = script;
@@ -463,9 +445,10 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
           {
             parts: [
               {
-                text:
-                  `Genera el audio de un episodio de standup comedy en español, en formato de podcast crítico de CVs, con el tono de un late-night show: sarcástico pero sofisticado, humor inteligente, evita ser cruel. Usa exactamente los nombres de los presentadores para cada intervención, incluye pausas naturales con "[...]" y énfasis con "[énfasis]" donde sea apropiado. Haz que la conversación fluya naturalmente, como un show de comedia nocturno.\n` +
-                  ttsPrompt,
+                text: devMode
+                  ? ttsPrompt
+                  : `Genera el audio de un episodio de standup comedy en español, en formato de podcast crítico de CVs, con el tono de un late-night show: sarcástico pero sofisticado, humor inteligente, evita ser cruel. Usa exactamente los nombres de los presentadores para cada intervención, incluye pausas naturales con "[...]" y énfasis con "[énfasis]" donde sea apropiado. Haz que la conversación fluya naturalmente, como un show de comedia nocturno.\n` +
+                    ttsPrompt,
               },
             ],
           },
@@ -497,13 +480,14 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
     } catch (error) {
       addLog(`Error generando episodio y audio: ${error}`);
       console.error("Error generando episodio y audio:", error);
+      setIsGeneratingScript(false);
+      setIsGeneratingAudio(false);
+      setPodcastScript("");
       setError(
         `Error al generar episodio y audio: ${
           error instanceof Error ? error.message : "Error desconocido"
         }`
       );
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -758,17 +742,17 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
           </div>
 
           {/* Generate Button */}
-          {canGenerate && !podcastScript && !devMode && (
+          {(devMode || (canGenerate && !podcastScript)) && (
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Generar episodio y audio
+                Generar episodio
               </h2>
               <button
                 onClick={generatePodcastAndAudio}
-                disabled={isGenerating || isExtracting}
+                disabled={isGeneratingScript || isGeneratingAudio}
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg transition-colors w-full flex items-center justify-center gap-2"
               >
-                {isGenerating ? (
+                {(isGeneratingScript || isGeneratingAudio) ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     Generando...
@@ -797,14 +781,22 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                   Episodio generado
                 </h2>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-h-96 overflow-y-auto whitespace-pre-wrap text-gray-700">
-                  {devMode
-                    ? "[Episodio de prueba]\nAlex: Bienvenidos a The CV Comedy Podcast.\nSam: Hoy solo estamos probando el visualizador de audio.\n[...]"
-                    : podcastScript}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(podcastScript);
+                      addLog("Episodio copiado al portapapeles");
+                      alert("Episodio copiado al portapapeles");
+                    }}
+                    className="mb-2 text-sm text-blue-400 h-full flex"
+                  >
+                    📋 Copiar episodio
+                  </button>
+                  {podcastScript}
                 </div>
-                {podcastScript && !devMode && (
+                {podcastScript && (
                   <button
                     onClick={downloadScript}
-                    className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors w-full"
+                    className="mt-4 bg-yellow-500/30 hover:bg-yellow-600/30 px-6 py-2 rounded-lg transition-colors w-full"
                   >
                     📥 Descargar episodio
                   </button>
@@ -815,37 +807,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 <div className="text-2xl font-semibold text-gray-800 mb-4 md:h-lh">
                   <h2 className="md:hidden">Audio generado</h2>
                 </div>
-                {devMode ? (
-                  audioBuffer ? (
-                    <div className="w-full flex flex-col items-center">
-                      <AudioVisualizer audioBuffer={audioBuffer} />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center min-h-[80px] w-full">
-                      {/* Portada y canvas aunque no haya audio */}
-                      <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
-                        <img
-                          src="/cover.png"
-                          alt="Portada del episodio"
-                          className="absolute inset-0 w-full h-full object-cover z-0"
-                        />
-                        <canvas
-                          width={800}
-                          height={800}
-                          className="absolute inset-0 w-full h-full z-10 pointer-events-none opacity-75"
-                        />
-                      </div>
-                      {/* ProgressBar mientras se genera el audio */}
-                      <div className="w-full max-w-md mt-2">
-                        <ProgressBar duration={120} />
-                      </div>
-                      <p className="text-gray-500 mt-2 text-center">
-                        Generando audio del episodio... Esto puede tardar unos
-                        minutos.
-                      </p>
-                    </div>
-                  )
-                ) : audioBuffer ? (
+                {audioBuffer ? (
                   <div className="w-full flex flex-col items-center">
                     <AudioVisualizer audioBuffer={audioBuffer} />
                   </div>
@@ -866,7 +828,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     </div>
                     {/* ProgressBar mientras se genera el audio */}
                     <div className="w-full max-w-md mt-2">
-                      <ProgressBar duration={120} />
+                      <ProgressBar duration={250} />
                     </div>
                     <p className="text-gray-500 mt-2">
                       Generando audio del episodio... Esto puede tardar unos
