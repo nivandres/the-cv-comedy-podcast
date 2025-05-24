@@ -12,7 +12,6 @@
     "@google/genai": "^1.0.1",
     "@google/generative-ai": "^0.24.1",
     "@tailwindcss/postcss": "^4.1.7",
-    "@types/pdfjs-dist": "^2.10.378",
     "buffer": "^6.0.3",
     "next": "15.1.8",
     "pdfjs-dist": "^5.2.133",
@@ -20,11 +19,12 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
+    "@types/pdfjs-dist": "^2.10.378",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.7"
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5"
   }
 }

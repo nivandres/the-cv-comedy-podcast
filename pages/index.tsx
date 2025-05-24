@@ -1,9 +1,7 @@
-import "./globals.css";
 import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleGenAI } from "@google/genai";
-import { Buffer } from "buffer";
 
 // Helper to convert base64 to Blob URL
 function base64ToBlob(base64: string, mimeType: string) {
