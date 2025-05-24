@@ -404,7 +404,9 @@ export default function TheCVComedyPodcast() {
 
       // Generate script with Gemini 2.0 Flash
       addLog("Generando episodio con Gemini 2.0 Flash...");
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-05-20" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash-preview-05-20",
+      });
 
       const scriptPrompt = `Bienvenido a The CV Comedy Podcast. Cada CV es un nuevo episodio. Eres un dúo de comediantes profesionales especializados en crear contenido humorístico inteligente para podcasts. Crea el libreto para un episodio de 4-6 minutos que critique de manera divertida y sarcástica un CV (el CV es el invitado del episodio).
 
@@ -574,6 +576,32 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
           content="Sube tu CV y genera un episodio humorístico de The CV Comedy Podcast usando Google Gemini 2.0 Flash con multi-speaker TTS"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="keywords"
+          content="podcast, CV, comedia, Google Gemini, TTS, inteligencia artificial, humor"
+        />
+        <meta
+          property="og:title"
+          content="The CV Comedy Podcast - Convierte CVs en episodios humorísticos"
+        />
+        <meta
+          property="og:description"
+          content="Convierte tu CV en un episodio humorístico con Google Gemini 2.0 Flash y Multi-Speaker TTS."
+        />
+        <meta property="og:image" content="/cover.png" />
+        <meta
+          property="og:url"
+          content="https://the-cv-comedy-podcast.vercel.app/"
+        />
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="The CV Comedy Podcast" />
+        <meta
+          name="twitter:description"
+          content="Convierte tu CV en un episodio humorístico con Google Gemini 2.0 Flash y Multi-Speaker TTS."
+        />
+        <meta name="twitter:image" content="/cover.png" />
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4">
         <div className="max-w-4xl mx-auto">

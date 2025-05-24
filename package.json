@@ -2,6 +2,11 @@
   "name": "the-cv-comedy-podcast",
   "description": "Convierte cada CV en un episodio humorístico de The CV Comedy Podcast usando Google Gemini 2.0 Flash con multi-speaker TTS",
   "version": "0.1.0",
+  "homepage": "https://the-cv-comedy-podcast.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nivandres/the-cv-comedy-podcast"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",

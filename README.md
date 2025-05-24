@@ -1,6 +1,10 @@
 # The CV Comedy Podcast
 
-🎙️ **The CV Comedy Podcast** es una aplicación experimental creada 100% con *full vibe coding* (programación asistida por IA), diseñada para mostrar el potencial de la inteligencia artificial en el desarrollo creativo y rápido de productos.
+🎙️ **The CV Comedy Podcast** es una aplicación experimental creada 100% con _full vibe coding_ (programación asistida por IA), diseñada para mostrar el potencial de la inteligencia artificial en el desarrollo creativo y rápido de productos.
+
+## Visita la página web
+
+Visita la página web de The CV Comedy Podcast en https://the-cv-comedy-podcast.vercel.app/
 
 ## Archivo principal
 
