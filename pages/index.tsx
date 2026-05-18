@@ -3,14 +3,6 @@ import Head from "next/head";
 import Image from "next/image";
 import { GoogleGenAI } from "@google/genai";
 
-function getStoredApiKey() {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return window.localStorage.getItem("apiKey") || "";
-}
-
 // Helper to wrap PCM in WAV header (for Gemini TTS output)
 function pcmToWav(
   pcm: Uint8Array,
@@ -123,7 +115,7 @@ function AudioVisualizer({ audioBuffer }: { audioBuffer: Blob }) {
     if (!ctx) return;
     let animationId: number;
     let analyser: AnalyserNode | null = null;
-    let dataArray = new Uint8Array(new ArrayBuffer(0));
+    let dataArray = new Uint8Array(0);
     let source: MediaElementAudioSourceNode | null = null;
     let audioCtx: AudioContext | null = null;
 
@@ -230,10 +222,6 @@ export default function TheCVComedyPodcast() {
   // --- Modo dev para mockup de audio ---
   const [devMode, setDevMode] = useState<boolean>(false);
   useEffect(() => {
-    setApiKey(getStoredApiKey());
-  }, []);
-
-  useEffect(() => {
     if (
       typeof window !== "undefined" &&
       window.location.search.includes("dev=1")
@@ -305,8 +293,12 @@ export default function TheCVComedyPodcast() {
         setManualText("");
         try {
           const pdfjsLib: any = await import("pdfjs-dist");
+          const pdfjsPackage: { default?: { version?: string }; version?: string } =
+            await import("pdfjs-dist/package.json");
+          const pdfjsVersion =
+            pdfjsPackage.default?.version || pdfjsPackage.version;
           pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://unpkg.com/pdfjs-dist@5.2.133/build/pdf.worker.min.mjs";
+            `https://unpkg.com/pdfjs-dist@${pdfjsVersion}/build/pdf.worker.min.mjs`;
           const arrayBuffer = await uploadedFile.arrayBuffer();
           const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
           const pdf = await loadingTask.promise;
@@ -493,18 +485,18 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       // Convierte PCM a WAV
       const wavBlob = pcmToWav(pcm);
       setAudioBuffer(wavBlob);
-      setIsGeneratingAudio(false);
     } catch (error) {
       addLog(`Error generando episodio y audio: ${error}`);
       console.error("Error generando episodio y audio:", error);
       setIsGeneratingScript(false);
-      setIsGeneratingAudio(false);
       setPodcastScript("");
       setError(
         `Error al generar episodio y audio: ${
           error instanceof Error ? error.message : "Error desconocido"
         }`
       );
+    } finally {
+      setIsGeneratingAudio(false);
     }
   };
 
@@ -633,11 +625,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 type="password"
                 id="apiKey"
                 value={apiKey}
-                onChange={(e) => {
-                  const nextApiKey = e.target.value;
-                  setApiKey(nextApiKey);
-                  window.localStorage.setItem("apiKey", nextApiKey);
-                }}
+                onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Ingresa tu API Key de Google AI Studio"
                 className="bg-white w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -651,6 +639,9 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 >
                   Google AI Studio
                 </a>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                La API Key solo se usa en esta sesión y ya no se guarda en el navegador.
               </p>
             </div>
           </div>
