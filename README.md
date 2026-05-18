@@ -13,7 +13,7 @@ Visita la página web de The CV Comedy Podcast en https://the-cv-comedy-podcast.
 ## ¿Qué hace esta app?
 
 - **Convierte cualquier CV (PDF o TXT) en un episodio humorístico de podcast**.
-- Utiliza **Google Gemini 2.5** para:
+- Utiliza **Google Gemini 2.5 Flash** para:
   - Resumir e interpretar el contenido de CVs, incluso en PDF.
   - Generar un libreto humorístico y crítico, como si el CV fuera el invitado de un late-night show.
   - Crear audio con voces múltiples (multi-speaker TTS), usando personalidades distintas para los hosts.

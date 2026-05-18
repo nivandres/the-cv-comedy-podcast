@@ -2,16 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
 import { GoogleGenAI } from "@google/genai";
 
-// Helper to convert base64 to Blob URL
-function base64ToBlob(base64: string, mimeType: string) {
-  const byteCharacters = atob(base64);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
+function getStoredApiKey() {
+  if (typeof window === "undefined") {
+    return "";
   }
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: mimeType });
-  return blob;
+
+  return window.localStorage.getItem("apiKey") || "";
 }
 
 // Helper to wrap PCM in WAV header (for Gemini TTS output)
@@ -59,20 +55,11 @@ function pcmToWav(
   return new Blob([wavBuffer], { type: "audio/wav" });
 }
 
-declare global {
-  interface Window {
-    paypal: any;
-  }
-}
-
 interface Speaker {
   name: string;
   voice: string;
   personality: string;
 }
-
-// @ts-ignore
-"localStorage" in globalThis ? null : (globalThis.localStorage = null);
 
 // Simple ProgressBar component for visual feedback
 function ProgressBar({ duration }: { duration: number }) {
@@ -116,6 +103,14 @@ function ProgressBar({ duration }: { duration: number }) {
 function AudioVisualizer({ audioBuffer }: { audioBuffer: Blob }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [audioUrl, setAudioUrl] = useState("");
+
+  useEffect(() => {
+    const nextAudioUrl = URL.createObjectURL(audioBuffer);
+    setAudioUrl(nextAudioUrl);
+
+    return () => URL.revokeObjectURL(nextAudioUrl);
+  }, [audioBuffer]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -125,7 +120,7 @@ function AudioVisualizer({ audioBuffer }: { audioBuffer: Blob }) {
     if (!ctx) return;
     let animationId: number;
     let analyser: AnalyserNode | null = null;
-    let dataArray: Uint8Array;
+    let dataArray = new Uint8Array(new ArrayBuffer(0));
     let source: MediaElementAudioSourceNode | null = null;
     let audioCtx: AudioContext | null = null;
 
@@ -189,7 +184,7 @@ function AudioVisualizer({ audioBuffer }: { audioBuffer: Blob }) {
       </div>
       <audio
         ref={audioRef}
-        src={URL.createObjectURL(audioBuffer)}
+        src={audioUrl}
         className="w-full max-w-xl mt-2"
         controls
       />
@@ -198,9 +193,7 @@ function AudioVisualizer({ audioBuffer }: { audioBuffer: Blob }) {
 }
 
 export default function TheCVComedyPodcast() {
-  const [apiKey, setApiKey] = useState<string>(
-    localStorage?.getItem("apiKey") || ""
-  );
+  const [apiKey, setApiKey] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [manualText, setManualText] = useState<string>("");
   const [podcastScript, setPodcastScript] = useState<string>("");
@@ -233,6 +226,10 @@ export default function TheCVComedyPodcast() {
   // --- Modo dev para mockup de audio ---
   const [devMode, setDevMode] = useState<boolean>(false);
   useEffect(() => {
+    setApiKey(getStoredApiKey());
+  }, []);
+
+  useEffect(() => {
     if (
       typeof window !== "undefined" &&
       window.location.search.includes("dev=1")
@@ -253,7 +250,6 @@ export default function TheCVComedyPodcast() {
   // --- Fin modo dev ---
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   const addLog = (message: string) => {
     console.log(message);
@@ -293,12 +289,20 @@ export default function TheCVComedyPodcast() {
     setManualText(""); // Limpiar manualText al subir nuevo archivo
 
     try {
-      if (uploadedFile.type === "application/pdf") {
+      const isPdf =
+        uploadedFile.type === "application/pdf" ||
+        uploadedFile.name.toLowerCase().endsWith(".pdf");
+      const isText =
+        uploadedFile.type === "text/plain" ||
+        uploadedFile.name.toLowerCase().endsWith(".txt");
+
+      if (isPdf) {
         addLog("Procesando archivo PDF...");
         setManualText("");
         try {
           const pdfjsLib: any = await import("pdfjs-dist");
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@latest/build/pdf.worker.min.mjs`;
+          pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://unpkg.com/pdfjs-dist@5.2.133/build/pdf.worker.min.mjs";
           const arrayBuffer = await uploadedFile.arrayBuffer();
           const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
           const pdf = await loadingTask.promise;
@@ -314,10 +318,6 @@ export default function TheCVComedyPodcast() {
           fullText = fullText.trim();
           if (fullText.length > 0) {
             setManualText(fullText);
-            // Extraer nombre si es posible
-            const nameMatch = fullText.match(
-              /^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)/m
-            );
           } else {
             setManualText("");
             setError(
@@ -334,6 +334,18 @@ export default function TheCVComedyPodcast() {
             "Error al procesar el PDF. Si es un PDF escaneado, pega el texto manualmente."
           );
         }
+      } else if (isText) {
+        addLog("Procesando archivo TXT...");
+        const fileText = (await uploadedFile.text()).trim();
+
+        if (!fileText) {
+          setError(
+            "El archivo TXT está vacío. Añade contenido o pega el CV manualmente."
+          );
+          return;
+        }
+
+        setManualText(fileText);
       } else {
         throw new Error("Tipo de archivo no soportado. Solo PDF y TXT.");
       }
@@ -373,7 +385,7 @@ export default function TheCVComedyPodcast() {
       addLog("Inicializando GoogleGenerativeAI...");
       const ai = new GoogleGenAI({ apiKey });
 
-      // Generate script with Gemini 2.0 Flash
+      // Generate script with Gemini 2.5 Flash
       addLog("Generando episodio con Gemini...");
       // const model = genAI.getGenerativeModel({
       //   model: "gemini-2.5-flash-preview-05-20",
@@ -477,6 +489,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       // Convierte PCM a WAV
       const wavBlob = pcmToWav(pcm);
       setAudioBuffer(wavBlob);
+      setIsGeneratingAudio(false);
     } catch (error) {
       addLog(`Error generando episodio y audio: ${error}`);
       console.error("Error generando episodio y audio:", error);
@@ -508,17 +521,6 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
   };
 
   const canGenerate = manualText.trim().length > 0 && apiKey.trim().length > 0;
-
-  useEffect(() => {
-    document.addEventListener("DOMContentLoaded", (event) => {
-      // @ts-ignore
-      paypal
-        .HostedButtons({
-          hostedButtonId: "6LF6GX88SWCUE",
-        })
-        .render("#paypal-container-6LF6GX88SWCUE");
-    });
-  }, []);
 
   // Feedback visual para procesamiento
   const renderProcessingFeedback = () =>
@@ -555,10 +557,10 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
           The CV Comedy Podcast - Convierte cada CV en un episodio humorístico
           con Gemini
         </title>
-        <meta
-          name="description"
-          content="Sube tu CV y genera un episodio humorístico de The CV Comedy Podcast usando Google Gemini 2.0 Flash con multi-speaker TTS"
-        />
+          <meta
+            name="description"
+            content="Sube tu CV y genera un episodio humorístico de The CV Comedy Podcast usando Google Gemini 2.5 Flash con multi-speaker TTS"
+          />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
           name="keywords"
@@ -568,10 +570,10 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
           property="og:title"
           content="The CV Comedy Podcast - Convierte CVs en episodios humorísticos"
         />
-        <meta
-          property="og:description"
-          content="Convierte tu CV en un episodio humorístico con Google Gemini 2.0 Flash y Multi-Speaker TTS."
-        />
+          <meta
+            property="og:description"
+            content="Convierte tu CV en un episodio humorístico con Google Gemini 2.5 Flash y Multi-Speaker TTS."
+          />
         <meta property="og:image" content="/cover.png" />
         <meta
           property="og:url"
@@ -581,10 +583,10 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="The CV Comedy Podcast" />
-        <meta
-          name="twitter:description"
-          content="Convierte tu CV en un episodio humorístico con Google Gemini 2.0 Flash y Multi-Speaker TTS."
-        />
+          <meta
+            name="twitter:description"
+            content="Convierte tu CV en un episodio humorístico con Google Gemini 2.5 Flash y Multi-Speaker TTS."
+          />
         <meta name="twitter:image" content="/cover.png" />
       </Head>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4">
@@ -596,14 +598,14 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
             </h1>
             <p className="text-lg text-gray-600 mb-4">
               Convierte cada CV en un episodio humorístico usando Google Gemini
-              2.0 Flash
+              2.5 Flash
             </p>
             <div className="flex justify-center items-center gap-2 text-sm text-gray-500">
               <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
                 ✨ Multi-Speaker TTS
               </span>
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                🤖 Gemini 2.0 Flash
+                🤖 Gemini 2.5 Flash
               </span>
               <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
                 😄 Humor Inteligente
@@ -627,10 +629,11 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 type="password"
                 id="apiKey"
                 value={apiKey}
-                onChange={(e) => (
-                  setApiKey(e.target.value),
-                  localStorage.setItem("apiKey", e.target.value)
-                )}
+                onChange={(e) => {
+                  const nextApiKey = e.target.value;
+                  setApiKey(nextApiKey);
+                  window.localStorage.setItem("apiKey", nextApiKey);
+                }}
                 placeholder="Ingresa tu API Key de Google AI Studio"
                 className="bg-white w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
