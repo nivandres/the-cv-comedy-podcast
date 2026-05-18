@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
+import Image from "next/image";
 import { GoogleGenAI } from "@google/genai";
 
 function getStoredApiKey() {
@@ -60,6 +61,8 @@ interface Speaker {
   voice: string;
   personality: string;
 }
+
+const MOCK_CV_SUMMARY = `NOMBRE DEL CANDIDATO: Juan Pérez\nPROFESIÓN/ÁREA: Ingeniero de Software\nEXPERIENCIA PRINCIPAL:\n- 5 años desarrollando aplicaciones web\n- Experiencia liderando equipos ágiles\nEDUCACIÓN: Licenciatura en Ingeniería Informática\nHABILIDADES DESTACADAS: JavaScript, React, Node.js, liderazgo\nOBSERVACIONES GENERALES: CV bien estructurado, pero usa muchos clichés y frases genéricas.`;
 
 // Simple ProgressBar component for visual feedback
 function ProgressBar({ duration }: { duration: number }) {
@@ -170,10 +173,13 @@ function AudioVisualizer({ audioBuffer }: { audioBuffer: Blob }) {
   return (
     <div className="relative w-full flex flex-col items-center">
       <div className="relative w-full max-w-xl aspect-square rounded-lg overflow-hidden shadow-lg">
-        <img
+        <Image
           src="/cover.png"
           alt="Portada del episodio"
-          className="absolute inset-0 w-full h-full object-cover z-0"
+          fill
+          sizes="(max-width: 768px) 100vw, 576px"
+          priority
+          className="absolute inset-0 object-cover z-0"
         />
         <canvas
           ref={canvasRef}
@@ -221,8 +227,6 @@ export default function TheCVComedyPodcast() {
   const [showManualInput, setShowManualInput] = useState<boolean>(false);
 
   // Mockup de resumen de CV para modo dev
-  const mockCvSummary = `NOMBRE DEL CANDIDATO: Juan Pérez\nPROFESIÓN/ÁREA: Ingeniero de Software\nEXPERIENCIA PRINCIPAL:\n- 5 años desarrollando aplicaciones web\n- Experiencia liderando equipos ágiles\nEDUCACIÓN: Licenciatura en Ingeniería Informática\nHABILIDADES DESTACADAS: JavaScript, React, Node.js, liderazgo\nOBSERVACIONES GENERALES: CV bien estructurado, pero usa muchos clichés y frases genéricas.`;
-
   // --- Modo dev para mockup de audio ---
   const [devMode, setDevMode] = useState<boolean>(false);
   useEffect(() => {
@@ -241,10 +245,10 @@ export default function TheCVComedyPodcast() {
   // Precarga automática de mock audio y script en modo dev
   useEffect(() => {
     if (devMode) {
-      setPodcastScript(
-        "[Episodio de prueba]\nAlex: Bienvenidos a The CV Comedy Podcast.\nSam: Hoy solo estamos probando el visualizador de audio.\n[...]"
-      );
-      setManualText(mockCvSummary); // Mostrar el mock summary en el área manual
+        setPodcastScript(
+          "[Episodio de prueba]\nAlex: Bienvenidos a The CV Comedy Podcast.\nSam: Hoy solo estamos probando el visualizador de audio.\n[...]"
+        );
+      setManualText(MOCK_CV_SUMMARY); // Mostrar el mock summary en el área manual
     }
   }, [devMode]);
   // --- Fin modo dev ---
@@ -817,11 +821,14 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-[80px] w-full">
                     {/* Portada y canvas aunque no haya audio */}
-                    <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
-                      <img
+                     <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
+                      <Image
                         src="/cover.png"
                         alt="Portada del episodio"
-                        className="absolute inset-0 w-full h-full object-cover z-0"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 448px"
+                        priority
+                        className="absolute inset-0 object-cover z-0"
                       />
                       <canvas
                         width={800}
