@@ -55,6 +55,8 @@ interface Speaker {
 }
 
 const MOCK_CV_SUMMARY = `NOMBRE DEL CANDIDATO: Juan Pérez\nPROFESIÓN/ÁREA: Ingeniero de Software\nEXPERIENCIA PRINCIPAL:\n- 5 años desarrollando aplicaciones web\n- Experiencia liderando equipos ágiles\nEDUCACIÓN: Licenciatura en Ingeniería Informática\nHABILIDADES DESTACADAS: JavaScript, React, Node.js, liderazgo\nOBSERVACIONES GENERALES: CV bien estructurado, pero usa muchos clichés y frases genéricas.`;
+const SCRIPT_MODEL = "gemini-2.5-flash";
+const TTS_MODEL = "gemini-2.5-flash-preview-tts";
 
 // Simple ProgressBar component for visual feedback
 function ProgressBar({ duration }: { duration: number }) {
@@ -383,9 +385,6 @@ export default function TheCVComedyPodcast() {
 
       // Generate script with Gemini 2.5 Flash
       addLog("Generando episodio con Gemini...");
-      // const model = genAI.getGenerativeModel({
-      //   model: "gemini-2.5-flash-preview-05-20",
-      // });
 
       const scriptPrompt = `Bienvenido a The CV Comedy Podcast. Cada CV es un nuevo episodio. Eres un dúo de comediantes profesionales especializados en crear contenido humorístico inteligente para podcasts. Crea el libreto para un episodio de 4-6 minutos que critique de manera divertida y sarcástica un CV (el CV es el invitado del episodio).
 
@@ -424,7 +423,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
         addLog("Enviando solicitud para generar episodio...");
         const parts = [`${scriptPrompt}\n\n${textToAnalyze}`];
         const result = await ai.models.generateContentStream({
-          model: "gemini-2.5-flash-preview-05-20",
+          model: SCRIPT_MODEL,
           contents: parts,
         });
 
@@ -448,7 +447,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       const ttsResult = await new GoogleGenAI({
         apiKey,
       }).models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
+        model: TTS_MODEL,
         contents: [
           {
             parts: [
