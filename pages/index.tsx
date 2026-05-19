@@ -235,9 +235,9 @@ export default function TheCVComedyPodcast() {
   // Precarga automática de mock audio y script en modo dev
   useEffect(() => {
     if (devMode) {
-        setPodcastScript(
-          "[Episodio de prueba]\nAlex: Bienvenidos a The CV Comedy Podcast.\nSam: Hoy solo estamos probando el visualizador de audio.\n[...]"
-        );
+      setPodcastScript(
+        "[Episodio de prueba]\nAlex: Bienvenidos a The CV Comedy Podcast.\nSam: Hoy solo estamos probando el visualizador de audio.\n[...]"
+      );
       setManualText(MOCK_CV_SUMMARY); // Mostrar el mock summary en el área manual
     }
   }, [devMode]);
@@ -811,7 +811,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-[80px] w-full">
                     {/* Portada y canvas aunque no haya audio */}
-                     <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
+                    <div className="relative w-full max-w-md aspect-square rounded-lg overflow-hidden shadow-lg">
                       <Image
                         src="/cover.png"
                         alt="Portada del episodio"
