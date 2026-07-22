@@ -74,7 +74,7 @@ export function StepCard({
           : "border-zinc-200 dark:border-zinc-800"
       } ${status === "locked" ? "opacity-50" : ""}`}
     >
-      <header className="flex items-center gap-3 px-5 pt-5 sm:px-6">
+      <header className="flex items-center gap-3 px-4 pt-4 sm:px-6 sm:pt-5">
         <span
           aria-hidden="true"
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
@@ -91,7 +91,7 @@ export function StepCard({
           {title}
         </h2>
       </header>
-      <div className="px-5 pb-5 pt-3 sm:px-6">{children}</div>
+      <div className="px-4 pb-4 pt-3 sm:px-6 sm:pb-5">{children}</div>
     </section>
   );
 }
@@ -184,7 +184,8 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label={isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-      className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800 transition-colors hover:bg-purple-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
+      title={isDark ? "Tema claro" : "Tema oscuro"}
+      className="flex h-9 w-9 items-center justify-center rounded-full text-base text-zinc-500 transition-colors hover:bg-purple-100 hover:text-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
     >
       <span aria-hidden="true">{isDark ? "☀️" : "🌙"}</span>
     </button>

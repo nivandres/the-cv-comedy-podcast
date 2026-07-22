@@ -859,19 +859,22 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
         />
         <meta name="twitter:image" content={`${APP_URL}cover-og.jpg`} />
       </Head>
-      <div className="min-h-screen bg-linear-to-br from-purple-50 to-blue-50 p-4 transition-colors dark:from-zinc-950 dark:to-zinc-900">
+      <div className="min-h-screen bg-linear-to-br from-purple-50 to-blue-50 px-4 py-3 transition-colors sm:py-4 dark:from-zinc-950 dark:to-zinc-900">
         <div className="mx-auto max-w-3xl">
-          {/* Header */}
-          <header className="relative mt-8 mb-8 text-center">
-            <div className="absolute right-0 top-0">
+          {/* Header: el toggle va en flujo normal (nunca se superpone) */}
+          <header className="mb-8">
+            <div className="flex justify-end">
               <ThemeToggle />
             </div>
-            <h1 className="mb-2 text-4xl font-bold text-gray-800 dark:text-zinc-100">
-              🎙️ The CV Comedy Podcast
-            </h1>
-            <p className="mb-4 text-lg text-zinc-600 dark:text-zinc-300">
-              Tu CV es el invitado. Gemini escribe el roast y le pone las voces.
-            </p>
+            <div className="mt-1 text-center sm:mt-0">
+              <h1 className="mb-2 text-3xl font-bold text-gray-800 sm:text-4xl dark:text-zinc-100">
+                🎙️ The CV Comedy Podcast
+              </h1>
+              <p className="mb-4 text-base text-zinc-600 sm:text-lg dark:text-zinc-300">
+                Tu CV es el invitado. Gemini escribe el roast y le pone las
+                voces.
+              </p>
+            </div>
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
               <span className="rounded-full bg-green-100 px-3 py-1 text-green-800 dark:bg-green-950 dark:text-green-300">
                 ✨ Multi-Speaker TTS
