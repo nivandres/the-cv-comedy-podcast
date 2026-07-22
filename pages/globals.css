@@ -1,9 +1,16 @@
 @import "tailwindcss";
 
+/* Dark mode por clase (.dark en <html>): claro por defecto, oscuro solo si el usuario lo elige */
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button {
-  cursor: pointer !important;
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
