@@ -16,6 +16,7 @@ El flujo es un **wizard de 3 pasos** (API Key → Tu CV → Tu episodio):
   - `audio.ts`: PCM→WAV, visualizador y exportación de video con `MediaRecorder`.
   - `subtitles.ts`: subtítulos aproximados por peso de texto.
 - **`components/`** — UI: sistema de diseño (`ui.tsx`) y reproductor único (`EpisodePlayer.tsx`) que reproduce las partes según llegan y conserva la posición al completarse el episodio.
+- **`i18n/`** — internacionalización con [intl-t](https://intl-t.dev): `translation.ts` (árbol de mensajes con loaders por idioma), `navigation.ts` + `proxy.ts` (proxy con `strategy: "request"`: el idioma se resuelve por cookie/`Accept-Language` y llega en el header `x-locale`, sin idioma en la URL) y `messages/` (es/en/pt/fr, incluidos los prompts de generación por idioma).
 
 ## ¿Qué hace esta app?
 
@@ -30,6 +31,8 @@ El flujo es un **wizard de 3 pasos** (API Key → Tu CV → Tu episodio):
 - **Subtítulos aproximados (CC)** opcionales sobre el visualizador.
 - Puedes **descargar el episodio** como libreto (.txt), audio (.wav) o **video** (portada + visualizador, .mp4/.webm), y **compartirlo** con la Web Share API.
 - **Tema claro/oscuro** y modo dev (`?dev=1`) con datos de prueba.
+- **Multi-idioma (31 idiomas)** con [intl-t](https://intl-t.dev): árabe, búlgaro, checo, alemán, griego, inglés, español, persa, finés, filipino, francés, hebreo, hindi, croata, indonesio, italiano, japonés, coreano, malayo, noruego, polaco, portugués, rumano, ruso, albanés, sueco, tailandés, turco, vietnamita, chino simplificado y tradicional. La raíz `/` sirve el idioma detectado por cookie/`Accept-Language` (misma URL para todos), el SSR sale traducido, el selector cambia de idioma **en caliente sin recargar**, y cada idioma —prompts de generación incluidos— llega en su propio chunk bajo demanda. Árabe, hebreo y persa se sirven en **RTL** (`dir`).
+- **SEO i18n**: cada idioma tiene una **URL canónica crawlable** (`/es`, `/en`, `/ja`, …) servida sin redirect; el `<head>` emite `hreflang` para los 31 idiomas + `x-default`, `canonical`, `og:locale`/`og:locale:alternate` y **JSON-LD** (`WebApplication`); hay **`sitemap.xml`** con alternantes por idioma y **`robots.txt`**.
 - Si te gusta, puedes apoyar el proyecto vía [GitHub Sponsors](https://github.com/sponsors/nivandres).
 
 ## ¿Por qué es especial?

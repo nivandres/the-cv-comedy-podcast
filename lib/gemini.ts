@@ -34,21 +34,24 @@ export function isTransientApiError(err: unknown): boolean {
   );
 }
 
-// Traduce los errores crudos de la API a mensajes accionables para el usuario
-export function describeApiError(err: unknown): string {
+// Clasifica los errores crudos de la API en categorías conocidas; la UI
+// traduce cada categoría al idioma activo (null → mostrar el mensaje crudo)
+export type ApiErrorKind = "unavailable" | "quota" | "invalidKey";
+
+export function classifyApiError(err: unknown): ApiErrorKind | null {
   const message = err instanceof Error ? err.message : String(err);
   if (/503|UNAVAILABLE|overloaded|high demand/i.test(message)) {
-    return "Los modelos de Gemini están saturados en este momento (error 503). Suele ser temporal: espera un par de minutos y reintenta.";
+    return "unavailable";
   }
   if (/429|RESOURCE_EXHAUSTED|quota/i.test(message)) {
-    return "Alcanzaste el límite de cuota de tu API Key (error 429). Espera un minuto y reintenta, o revisa tu plan en Google AI Studio.";
+    return "quota";
   }
   if (
     /API key not valid|API_KEY_INVALID|PERMISSION_DENIED|401|403/i.test(message)
   ) {
-    return "La API Key no es válida o no tiene permisos. Revísala en Google AI Studio.";
+    return "invalidKey";
   }
-  return message || "Error desconocido";
+  return null;
 }
 
 // Ejecuta una llamada a la API probando modelos en orden: los errores

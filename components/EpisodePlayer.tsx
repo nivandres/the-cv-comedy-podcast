@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { drawSpectrumFrame, wavDuration } from "@/lib/audio";
 import { parseTurns, pickTurn, type SubtitleTurn } from "@/lib/subtitles";
+import { useTranslation } from "@/i18n/translation";
 import { Spinner } from "@/components/ui";
 
 export function EpisodePlayer({
@@ -25,6 +26,7 @@ export function EpisodePlayer({
   isGenerating: boolean;
   sampleRate: number;
 }) {
+  const t = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [segIndex, setSegIndex] = useState(0);
@@ -235,24 +237,25 @@ export function EpisodePlayer({
   }, []);
 
   const hasAudio = Boolean(currentBlob);
+  const partVariables = { current: segIndex + 1, total: totalSegments };
   const statusText = fullAudio
-    ? "Episodio completo"
+    ? t.player.complete
     : playBlocked
-      ? `Pulsa play para continuar (parte ${segIndex + 1} de ${totalSegments})`
+      ? t.player.playBlocked(partVariables)
       : waiting
-        ? "Esperando la siguiente parte del episodio..."
+        ? t.player.waiting
         : hasAudio
-          ? `Parte ${segIndex + 1} de ${totalSegments} · puedes escuchar mientras se genera el resto`
+          ? t.player.part(partVariables)
           : isGenerating
-            ? "Preparando la primera parte del audio..."
-            : "El audio del episodio aparecerá aquí";
+            ? t.player.preparing
+            : t.player.empty;
 
   return (
     <div className="flex w-full flex-col items-center gap-2">
       <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-2xl shadow-lg">
         <Image
           src="/cover.png"
-          alt="Portada del episodio"
+          alt={String(t.player.cover)}
           fill
           sizes="(max-width: 768px) 100vw, 448px"
           className={`absolute inset-0 z-0 object-cover transition-opacity ${
@@ -290,7 +293,7 @@ export function EpisodePlayer({
         onEnded={handleEnded}
         onTimeUpdate={handleTimeUpdate}
         onSeeked={() => subtitlesOn && updateSubtitle(true)}
-        aria-label="Audio del episodio"
+        aria-label={String(t.player.audioLabel)}
       />
       <div className="flex w-full max-w-md items-center justify-between gap-2">
         <p
@@ -314,7 +317,7 @@ export function EpisodePlayer({
                 : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
             }`}
           >
-            💬 CC
+            {t.player.cc}
           </button>
         )}
       </div>

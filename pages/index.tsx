@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
+import type { GetServerSideProps } from "next";
 import type { Part } from "@google/genai";
 import {
   pcmToWav,
@@ -16,10 +17,22 @@ import {
   TTS_MODELS,
   TTS_SEGMENT_MAX_CHARS,
   callWithFallback,
+  classifyApiError,
   createClient,
-  describeApiError,
   splitScriptIntoSegments,
 } from "@/lib/gemini";
+import { useLocale } from "intl-t/react";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  OG_LOCALES,
+  SITE_URL,
+  isAppLocale,
+  localeLoaders,
+  localeUrl,
+  useTranslation,
+  type AppLocale,
+} from "@/i18n/translation";
 import {
   Button,
   Spinner,
@@ -27,28 +40,22 @@ import {
   ProgressBar,
   Alert,
   ThemeToggle,
+  LanguageSwitcher,
   type StepStatus,
 } from "@/components/ui";
 import { EpisodePlayer } from "@/components/EpisodePlayer";
 
+// Los nombres son literales en los prompts de cada locale (deben coincidir
+// con las etiquetas "Alex:"/"Sam:" del libreto); las personalidades viven en
+// locales/*.ts dentro de prompt.script.
 interface Speaker {
   name: string;
   voice: string;
-  personality: string;
 }
 
 const SPEAKERS: Speaker[] = [
-  {
-    name: "Alex",
-    voice: "Kore",
-    personality: "Analítico y sarcástico, hace observaciones técnicas precisas",
-  },
-  {
-    name: "Sam",
-    voice: "Puck",
-    personality:
-      "Espontáneo y gracioso, hace comentarios divertidos y observaciones casuales",
-  },
+  { name: "Alex", voice: "Kore" },
+  { name: "Sam", voice: "Puck" },
 ];
 
 const SPEAKER_NAMES = SPEAKERS.map((speaker) => speaker.name);
@@ -61,6 +68,11 @@ const APP_URL = "https://the-cv-comedy-podcast.vercel.app/";
 const MIN_PDF_TEXT_CHARS = 100;
 
 export default function TheCVComedyPodcast() {
+  const t = useTranslation();
+  // Locale activo (reactivo: sigue el cambio de idioma en caliente) para las
+  // etiquetas SEO — así canonical/og/hreflang concuerdan con lo que se muestra.
+  const { locale: rawLocale } = useLocale();
+  const locale: AppLocale = isAppLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
   // ── Paso 1: API key ────────────────────────────────────────────────
   const [apiKey, setApiKey] = useState("");
   const [rememberKey, setRememberKey] = useState(true);
@@ -113,6 +125,17 @@ export default function TheCVComedyPodcast() {
   const [activityNote, setActivityNote] = useState("");
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [devMode, setDevMode] = useState(false);
+
+  // Mensaje de error de la API en el idioma activo (categorías conocidas
+  // traducidas; desconocidas muestran el mensaje crudo)
+  const apiErrorMessage = (err: unknown) => {
+    const kind = classifyApiError(err);
+    if (kind) return String(t.api[kind]);
+    return (
+      (err instanceof Error ? err.message : String(err)) ||
+      String(t.api.unknown)
+    );
+  };
 
   const addLog = (message: string) => {
     if (devMode) console.log(message);
@@ -172,15 +195,14 @@ export default function TheCVComedyPodcast() {
         show: true,
         value: videoProgress,
         indeterminate: false,
-        label:
-          "Grabando el video en tiempo real (tarda lo que dura el episodio)...",
+        label: String(t.episode.progress.video),
       }
     : isGeneratingScript
       ? {
           show: true,
           value: 0,
           indeterminate: true,
-          label: activityNote || "Escribiendo el libreto...",
+          label: activityNote || String(t.episode.progress.writing),
         }
       : isGeneratingAudio
         ? {
@@ -192,10 +214,15 @@ export default function TheCVComedyPodcast() {
             indeterminate: totalSegments === 0,
             label:
               totalSegments > 0
-                ? `${activityNote || "Grabando el episodio..."} (${
-                    audioSegments.length
-                  }/${totalSegments} partes listas)`
-                : "Preparando el audio...",
+                ? String(
+                    t.episode.progress.partsReady({
+                      label:
+                        activityNote || String(t.episode.progress.recording),
+                      done: audioSegments.length,
+                      total: totalSegments,
+                    })
+                  )
+                : String(t.episode.progress.preparingAudio),
           }
         : { show: false, value: 0, indeterminate: false, label: "" };
 
@@ -207,13 +234,11 @@ export default function TheCVComedyPodcast() {
     const key = apiKey.trim();
     const doc = docRef.current;
     if (!doc) {
-      setFileError("Vuelve a subir el archivo para extraer el texto con IA.");
+      setFileError(String(t.cv.errors.reupload));
       return;
     }
     if (!key) {
-      setFileError(
-        "Ingresa tu API Key (paso 1) para extraer el texto con OCR (IA)."
-      );
+      setFileError(String(t.cv.errors.ocrNeedsKey));
       return;
     }
     setIsOcrRunning(true);
@@ -229,9 +254,7 @@ export default function TheCVComedyPodcast() {
             contents: [
               {
                 parts: [
-                  {
-                    text: "Extrae y transcribe TODO el texto de este CV (currículum). Devuelve únicamente el texto plano del documento, sin comentarios ni formato markdown. Conserva la estructura (secciones, fechas, listas) con saltos de línea.",
-                  },
+                  { text: String(t.prompt.ocr) },
                   {
                     inlineData: {
                       mimeType: doc.mimeType,
@@ -245,7 +268,7 @@ export default function TheCVComedyPodcast() {
         addLog
       );
       const text = (result.text || "").trim();
-      if (!text) throw new Error("El modelo no devolvió texto");
+      if (!text) throw new Error(String(t.cv.errors.ocrEmpty));
       // Si el usuario quitó o reemplazó el archivo mientras corría el OCR,
       // este resultado ya no es vigente: descartarlo
       if (docRef.current !== doc) {
@@ -259,7 +282,7 @@ export default function TheCVComedyPodcast() {
       addLog(`Error en OCR: ${ocrError}`);
       if (docRef.current === doc) {
         setFileError(
-          `No se pudo extraer el texto con IA: ${describeApiError(ocrError)}`
+          String(t.cv.errors.ocrFailed({ reason: apiErrorMessage(ocrError) }))
         );
       }
     } finally {
@@ -301,9 +324,7 @@ export default function TheCVComedyPodcast() {
         /\.(png|jpe?g|webp)$/.test(fileName);
 
       if (!isPdf && !isImage && !isDocx && !isText) {
-        throw new Error(
-          "Tipo de archivo no soportado. Usa PDF, DOCX, TXT o una imagen (PNG/JPG/WebP)."
-        );
+        throw new Error(String(t.cv.errors.unsupported));
       }
       setFile(uploadedFile);
       // Si el usuario quita o reemplaza el archivo durante la extracción,
@@ -352,9 +373,7 @@ export default function TheCVComedyPodcast() {
           await runOcr();
         } else {
           setNeedsOcr(true);
-          setFileError(
-            "No se pudo extraer texto del PDF (parece escaneado). Ingresa tu API Key y pulsa «Extraer texto con IA (OCR)», o pega el texto manualmente."
-          );
+          setFileError(String(t.cv.errors.pdfScanned));
         }
       } else if (isImage) {
         addLog("Procesando imagen del CV...");
@@ -369,9 +388,7 @@ export default function TheCVComedyPodcast() {
           await runOcr();
         } else {
           setNeedsOcr(true);
-          setFileError(
-            "Para leer el CV desde una imagen se usa OCR con IA. Ingresa tu API Key (paso 1) y pulsa «Extraer texto con IA (OCR)»."
-          );
+          setFileError(String(t.cv.errors.imageNeedsOcr));
         }
       } else if (isDocx) {
         addLog("Procesando archivo DOCX...");
@@ -383,9 +400,7 @@ export default function TheCVComedyPodcast() {
         if (stale()) return;
         if (!docxText) {
           setFile(null);
-          setFileError(
-            "No se pudo extraer texto del DOCX. Pega el CV manualmente."
-          );
+          setFileError(String(t.cv.errors.docxEmpty));
           return;
         }
         setCvText(docxText);
@@ -395,9 +410,7 @@ export default function TheCVComedyPodcast() {
         if (stale()) return;
         if (!fileText) {
           setFile(null);
-          setFileError(
-            "El archivo TXT está vacío. Añade contenido o pega el CV manualmente."
-          );
+          setFileError(String(t.cv.errors.txtEmpty));
           return;
         }
         setCvText(fileText);
@@ -408,9 +421,12 @@ export default function TheCVComedyPodcast() {
       if (uploadIdRef.current === uploadId) {
         setFile(null);
         setFileError(
-          `Error al procesar archivo: ${
-            error instanceof Error ? error.message : "Error desconocido"
-          }`
+          String(
+            t.cv.errors.processFailed({
+              reason:
+                error instanceof Error ? error.message : String(t.api.unknown),
+            })
+          )
         );
       }
     } finally {
@@ -449,45 +465,19 @@ export default function TheCVComedyPodcast() {
 
     try {
       const ai = await createClient(apiKey);
-      // NOTA: prompt original intacto; solo se añade el contexto temporal
-      // (fecha actual) y el material visual opcional del documento.
-      const today = new Date().toLocaleDateString("es-ES", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
-      const scriptPrompt = `Bienvenido a The CV Comedy Podcast. Cada CV es un nuevo episodio. Eres un dúo de comediantes profesionales especializados en crear contenido humorístico inteligente para podcasts. Crea el libreto para un episodio de 4-6 minutos que critique de manera divertida y sarcástica un CV (el CV es el invitado del episodio).
-
-FORMATO REQUERIDO para multi-speaker TTS:
-${SPEAKERS[0].name}: [texto del primer host]
-${SPEAKERS[1].name}: [texto del segundo host]
-
-CARACTERÍSTICAS DE LOS HOSTS:
-- ${SPEAKERS[0].name}: ${SPEAKERS[0].personality}
-- ${SPEAKERS[1].name}: ${SPEAKERS[1].personality}
-
-ELEMENTOS A CRITICAR CON HUMOR INTELIGENTE:
-- Clichés típicos: "soy muy perfeccionista", "trabajo bien en equipo"
-- Inconsistencias temporales o lógicas
-- Habilidades exageradas: "experto en todo"
-- Descripciones pomposas de trabajos básicos
-- Objetivos profesionales vagos: "busco crecer profesionalmente"
-- Hobbies irrelevantes o clichés
-- Errores ortográficos o gramaticales
-
-TONO: Sarcástico pero sofisticado, como un late-night comedy show. Mantén el humor inteligente y evita ser cruel.
-
-IMPORTANTE:
-- Usa EXACTAMENTE "${SPEAKERS[0].name}:" y "${SPEAKERS[1].name}:" para cada intervención
-- Incluye pausas naturales con "[...]"
-- Añade énfasis con "[énfasis]" donde sea apropiado
-- Haz que la conversación fluya naturalmente
-- Máximo 3 minutos y medio. MAXIMO
-
-CONTEXTO TEMPORAL: Hoy es ${today}. Evalúa las fechas del CV en relación con esta fecha real: una fecha reciente o posterior a tu conocimiento NO es una inconsistencia temporal.
-
-Analiza este CV y crea el libreto del episodio en español, y bastante bastante crítico (literalmente un roast sin piedad):`;
+      // El prompt vive en i18n/messages/*.ts (sección `prompt`): el episodio se
+      // genera en el idioma activo de la UI. Interpolamos la fecha actual para
+      // que el modelo no vea "inconsistencias temporales" fantasma. La
+      // formateamos en calendario gregoriano con año en dígitos latinos (el mes
+      // sí en el idioma) para que sea comparable con las fechas del CV: sin esto
+      // fa saldría en Jalali y th en calendario budista. intl-t deja pasar los
+      // strings tal cual (solo auto-formatea objetos Date).
+      const dateStr = new Intl.DateTimeFormat(locale, {
+        calendar: "gregory",
+        numberingSystem: "latn",
+        dateStyle: "long",
+      }).format(new Date());
+      const scriptPrompt = String(t.prompt.script({ date: dateStr }));
 
       let script = "";
       if (devMode) {
@@ -498,9 +488,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
         // puede "verlo": foto, diseño, tipografía y vibe general como material
         // extra para el humor, sin tomarlo demasiado literal.
         const doc = docRef.current;
-        const vibesNote = doc
-          ? `\n\nMATERIAL EXTRA: adjunto va el documento original del CV. Míralo con ojo de comediante: la foto, el diseño, la tipografía, los colores, el "vibe" general. Si algo visual da para un buen chiste, úsalo (una o dos menciones bien colocadas), pero no lo describas literalmente ni lo conviertas en el centro del episodio.`
-          : "";
+        const vibesNote = doc ? `\n\n${t.prompt.vibes}` : "";
         const parts: Part[] = [
           { text: `${scriptPrompt}${vibesNote}\n\n${cvText}` },
         ];
@@ -516,7 +504,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
         const { result: generatedScript } = await callWithFallback(
           SCRIPT_MODELS,
           async (model) => {
-            setActivityNote(`Escribiendo el libreto con ${model}...`);
+            setActivityNote(String(t.episode.progress.writingWith({ model })));
             setPodcastScript(""); // limpiar texto parcial de intentos previos
             let accumulated = "";
             // El stream llega a más velocidad de la que vale la pena
@@ -549,7 +537,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       }
 
       if (!script.trim()) {
-        throw new Error("El modelo no devolvió el libreto del episodio");
+        throw new Error(String(t.episode.errors.scriptEmpty));
       }
       addLog(`Episodio generado: ${script.substring(0, 100)}...`);
       setPodcastScript(script);
@@ -562,7 +550,9 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       console.error("Error generando episodio:", error);
       setPodcastScript("");
       setScriptError(
-        `Error al generar el episodio: ${describeApiError(error)}`
+        String(
+          t.episode.errors.scriptFailed({ reason: apiErrorMessage(error) })
+        )
       );
     } finally {
       setIsGeneratingScript(false);
@@ -577,7 +567,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       setCopyState("copied");
       setTimeout(() => setCopyState("idle"), 2000);
     } catch {
-      setScriptError("No se pudo copiar al portapapeles.");
+      setScriptError(String(t.episode.errors.copyFailed));
     }
   };
 
@@ -606,9 +596,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
     setIsGeneratingAudio(true);
     try {
       const ai = await createClient(apiKey);
-      const stylePrefix = devMode
-        ? ""
-        : `Genera el audio de un episodio de standup comedy en español, en formato de podcast crítico de CVs, con el tono de un late-night show: sarcástico pero sofisticado, humor inteligente, evita ser cruel. Usa exactamente los nombres de los presentadores para cada intervención, incluye pausas naturales con "[...]" y énfasis con "[énfasis]" donde sea apropiado. Haz que la conversación fluya naturalmente, como un show de comedia nocturno.\n`;
+      const stylePrefix = devMode ? "" : `${t.prompt.ttsStyle}\n`;
 
       if (!resume || segTextsRef.current.length === 0) {
         resetAudioState();
@@ -628,7 +616,14 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       );
 
       for (let i = pcmChunksRef.current.length; i < segTexts.length; i++) {
-        setActivityNote(`Grabando parte ${i + 1} de ${segTexts.length}...`);
+        setActivityNote(
+          String(
+            t.episode.progress.recordingPart({
+              current: i + 1,
+              total: segTexts.length,
+            })
+          )
+        );
         const { result, modelIdx } = await callWithFallback(
           TTS_MODELS,
           async (ttsModel) => {
@@ -655,7 +650,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 (part) => part.inlineData?.data
               ) ?? [];
             if (audioParts.length === 0) {
-              throw new Error("La respuesta no contiene audio");
+              throw new Error(String(t.episode.errors.noAudio));
             }
             const pcm = concatPcm(
               audioParts.map((part) =>
@@ -703,9 +698,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       addLog(`Error generando audio: ${error}`);
       console.error("Error generando audio:", error);
       setAudioError(
-        `Error al generar el audio: ${describeApiError(
-          error
-        )} Lo ya generado se conserva: puedes reanudar desde donde quedó.`
+        String(t.episode.errors.audioFailed({ reason: apiErrorMessage(error) }))
       );
     } finally {
       setIsGeneratingAudio(false);
@@ -763,9 +756,12 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
       } else {
         addLog(`Error exportando video: ${error}`);
         setVideoError(
-          `No se pudo exportar el video: ${
-            error instanceof Error ? error.message : "Error desconocido"
-          }`
+          String(
+            t.episode.errors.videoFailed({
+              reason:
+                error instanceof Error ? error.message : String(t.api.unknown),
+            })
+          )
         );
       }
     } finally {
@@ -777,7 +773,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
   const shareEpisode = async () => {
     const shareData = {
       title: "The CV Comedy Podcast",
-      text: "Escucha el episodio humorístico de mi CV 🎙️😂",
+      text: String(t.episode.shareText),
       url: APP_URL,
     };
     try {
@@ -818,52 +814,81 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
   // ── Render ─────────────────────────────────────────────────────────
 
   const generateDisabledReason = !hasKey
-    ? "Falta tu API Key (paso 1)."
+    ? t.episode.missingKey
     : !hasCv
-      ? "Falta el texto de tu CV (paso 2)."
+      ? t.episode.missingCv
       : isExportingVideo
-        ? "Espera a que termine la exportación del video."
+        ? t.episode.waitVideo
         : "";
+
+  // SEO i18n: canonical por idioma + Open Graph. Las alternantes hreflang
+  // (todas las URLs por locale + x-default → la raíz) van en el <Head>.
+  const canonical = localeUrl(locale);
+  const ogImage = `${APP_URL}cover-og.jpg`;
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "The CV Comedy Podcast",
+    url: SITE_URL,
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Web",
+    inLanguage: [...LOCALES],
+    description: String(t.meta.description),
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  });
 
   return (
     <>
       <Head>
-        <title>
-          The CV Comedy Podcast - Convierte cada CV en un episodio humorístico
-          con Gemini
-        </title>
-        <meta
-          name="description"
-          content="Sube tu CV y genera un episodio humorístico de The CV Comedy Podcast usando Google Gemini 3.5 Flash con multi-speaker TTS"
-        />
-        <meta
-          name="keywords"
-          content="podcast, CV, comedia, Google Gemini, TTS, inteligencia artificial, humor"
-        />
-        <meta
-          property="og:title"
-          content="The CV Comedy Podcast - Convierte CVs en episodios humorísticos"
-        />
+        <title>{String(t.meta.title)}</title>
+        <meta name="description" content={String(t.meta.description)} />
+        <meta name="keywords" content={String(t.meta.keywords)} />
+        <link rel="canonical" href={canonical} />
+        {/* Alternantes por idioma (crawlables) + x-default = raíz que negocia */}
+        <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}/`} />
+        {LOCALES.map((loc) => (
+          <link
+            key={`alt-${loc}`}
+            rel="alternate"
+            hrefLang={loc}
+            href={localeUrl(loc)}
+          />
+        ))}
+        <meta property="og:title" content={String(t.meta.ogTitle)} />
         <meta
           property="og:description"
-          content="Convierte tu CV en un episodio humorístico con Google Gemini 3.5 Flash y Multi-Speaker TTS."
+          content={String(t.meta.ogDescription)}
         />
-        <meta property="og:image" content={`${APP_URL}cover-og.jpg`} />
-        <meta property="og:url" content={APP_URL} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={canonical} />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="The CV Comedy Podcast" />
+        <meta property="og:locale" content={OG_LOCALES[locale]} />
+        {LOCALES.filter((loc) => loc !== locale).map((loc) => (
+          <meta
+            key={`ogloc-${loc}`}
+            property="og:locale:alternate"
+            content={OG_LOCALES[loc]}
+          />
+        ))}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="The CV Comedy Podcast" />
         <meta
           name="twitter:description"
-          content="Convierte tu CV en un episodio humorístico con Google Gemini 3.5 Flash y Multi-Speaker TTS."
+          content={String(t.meta.ogDescription)}
         />
-        <meta name="twitter:image" content={`${APP_URL}cover-og.jpg`} />
+        <meta name="twitter:image" content={ogImage} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
+        />
       </Head>
       <div className="min-h-screen bg-linear-to-br from-purple-50 to-blue-50 px-4 py-3 transition-colors sm:py-4 dark:from-zinc-950 dark:to-zinc-900">
         <div className="mx-auto max-w-3xl">
           {/* Header: el toggle va en flujo normal (nunca se superpone) */}
           <header className="mb-8">
-            <div className="flex justify-end">
+            <div className="flex items-center justify-end gap-2">
+              <LanguageSwitcher />
               <ThemeToggle />
             </div>
             <div className="mt-1 text-center sm:mt-0">
@@ -871,38 +896,41 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 🎙️ The CV Comedy Podcast
               </h1>
               <p className="mb-4 text-base text-zinc-600 sm:text-lg dark:text-zinc-300">
-                Tu CV es el invitado. Gemini escribe el roast y le pone las
-                voces.
+                {t.header.tagline}
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
               <span className="rounded-full bg-green-100 px-3 py-1 text-green-800 dark:bg-green-950 dark:text-green-300">
-                ✨ Multi-Speaker TTS
+                {t.header.badges.tts}
               </span>
               <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                🤖 Gemini 3.5 Flash
+                {t.header.badges.gemini}
               </span>
               <span className="rounded-full bg-purple-100 px-3 py-1 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
-                😄 Humor inteligente
+                {t.header.badges.humor}
               </span>
             </div>
           </header>
 
           <div className="flex flex-col gap-4">
             {/* Paso 1: API Key */}
-            <StepCard number={1} title="Tu API Key" status={stepStatus[1]}>
+            <StepCard
+              number={1}
+              title={String(t.apikey.title)}
+              status={stepStatus[1]}
+            >
               <label
                 htmlFor="apiKey"
                 className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Google AI API Key
+                {t.apikey.inputLabel}
               </label>
               <input
                 type="password"
                 id="apiKey"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Pega aquí tu API Key"
+                placeholder={String(t.apikey.placeholder)}
                 autoComplete="off"
                 spellCheck={false}
                 className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-zinc-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
@@ -915,7 +943,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     onChange={(e) => setRememberKey(e.target.checked)}
                     className="h-4 w-4 accent-purple-600"
                   />
-                  Recordar en este navegador
+                  {t.apikey.remember}
                 </label>
                 <a
                   href="https://aistudio.google.com/app/apikey"
@@ -923,18 +951,20 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                   rel="noopener noreferrer"
                   className="py-2 text-sm text-blue-600 hover:underline dark:text-blue-300"
                 >
-                  Consigue una API Key gratis ↗
+                  {t.apikey.getKey}
                 </a>
               </div>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                La key se usa directamente desde tu navegador contra la API de
-                Google. Si activas «Recordar», se guarda solo en este
-                dispositivo.
+                {t.apikey.note}
               </p>
             </StepCard>
 
             {/* Paso 2: CV */}
-            <StepCard number={2} title="Tu CV" status={stepStatus[2]}>
+            <StepCard
+              number={2}
+              title={String(t.cv.title)}
+              status={stepStatus[2]}
+            >
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -955,17 +985,18 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                       ✅ {file.name}
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {(file.size / 1024).toFixed(1)} KB · haz clic para
-                      reemplazarlo
+                      {t.cv.sizeReplace({
+                        size: (file.size / 1024).toFixed(1),
+                      })}
                     </span>
                   </span>
                 ) : (
                   <span className="flex flex-col items-center gap-1">
                     <span className="text-zinc-700 dark:text-zinc-200">
-                      Arrastra tu CV aquí o haz clic para seleccionar
+                      {t.cv.dropDrag}
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      PDF, DOCX, TXT o imagen (PNG/JPG/WebP)
+                      {t.cv.dropFormats}
                     </span>
                   </span>
                 )}
@@ -988,9 +1019,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                   className="mt-3 flex items-center justify-center gap-2 text-sm font-medium text-purple-700 dark:text-purple-300"
                 >
                   <Spinner />
-                  {isOcrRunning
-                    ? "Extrayendo texto del documento con Gemini (OCR)..."
-                    : "Procesando archivo..."}
+                  {isOcrRunning ? t.cv.ocring : t.cv.processing}
                 </p>
               )}
 
@@ -1001,7 +1030,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     onClick={runOcr}
                     disabled={!hasKey || isOcrRunning}
                   >
-                    🔍 Extraer texto con IA (OCR)
+                    {t.cv.ocrButton}
                   </Button>
                 </div>
               )}
@@ -1013,11 +1042,11 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                   htmlFor="cvText"
                   className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
                 >
-                  Texto del CV
+                  {t.cv.textLabel}
                 </label>
                 {file && (
                   <Button variant="ghost" onClick={clearFile} disabled={busy}>
-                    Quitar archivo
+                    {t.cv.clearFile}
                   </Button>
                 )}
               </div>
@@ -1025,18 +1054,20 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 id="cvText"
                 value={cvText}
                 onChange={(e) => setCvText(e.target.value)}
-                placeholder={
-                  file
-                    ? "Aquí aparecerá el texto extraído de tu CV. Puedes editarlo antes de generar el episodio..."
-                    : "...o pega aquí el texto de tu CV directamente"
-                }
+                placeholder={String(
+                  file ? t.cv.placeholderFile : t.cv.placeholderManual
+                )}
                 disabled={isExtracting || busy}
                 className="mt-1 h-36 w-full resize-none rounded-xl border border-zinc-300 bg-white p-3 text-sm text-zinc-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </StepCard>
 
             {/* Paso 3: El episodio (libreto + audio + compartir) */}
-            <StepCard number={3} title="Tu episodio" status={stepStatus[3]}>
+            <StepCard
+              number={3}
+              title={String(t.episode.title)}
+              status={stepStatus[3]}
+            >
               <Button
                 variant="primary"
                 className="w-full"
@@ -1045,12 +1076,12 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
               >
                 {busy ? (
                   <>
-                    <Spinner /> Generando episodio...
+                    <Spinner /> {t.episode.generating}
                   </>
                 ) : scriptReady ? (
-                  "🔁 Generar un episodio nuevo"
+                  t.episode.regenerate
                 ) : (
-                  "🎭 Generar episodio"
+                  t.episode.generate
                 )}
               </Button>
               {!busy && !isExportingVideo && generateDisabledReason && (
@@ -1081,11 +1112,15 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                        {isGeneratingScript ? "Escribiendo..." : "Libreto"}
+                        {isGeneratingScript
+                          ? t.episode.scriptWriting
+                          : t.episode.scriptReady}
                       </h3>
                       {!isGeneratingScript && (
                         <Button variant="ghost" size="sm" onClick={copyScript}>
-                          {copyState === "copied" ? "✓ Copiado" : "📋 Copiar"}
+                          {copyState === "copied"
+                            ? t.episode.copied
+                            : t.episode.copy}
                         </Button>
                       )}
                     </div>
@@ -1124,12 +1159,11 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                       }
                       disabled={busy}
                     >
-                      🔁{" "}
                       {audioSegments.length > 0
-                        ? `Reanudar audio (desde la parte ${
-                            audioSegments.length + 1
-                          })`
-                        : "Reintentar audio"}
+                        ? t.episode.errors.resume({
+                            part: audioSegments.length + 1,
+                          })
+                        : t.episode.errors.retryAudio}
                     </Button>
                   </div>
                 </>
@@ -1145,8 +1179,8 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     disabled={!audioReady}
                   >
                     {shareState === "copied"
-                      ? "✓ Enlace copiado"
-                      : "📣 Compartir"}
+                      ? t.episode.linkCopied
+                      : t.episode.share}
                   </Button>
                   <Button
                     variant="secondary"
@@ -1154,14 +1188,14 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     onClick={downloadAudio}
                     disabled={!audioReady}
                   >
-                    🎵 Audio (.wav)
+                    {t.episode.audioFile}
                   </Button>
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={downloadScript}
                   >
-                    📄 Libreto (.txt)
+                    {t.episode.scriptFile}
                   </Button>
                   <Button
                     variant="secondary"
@@ -1173,7 +1207,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     }
                     disabled={!audioReady && !isExportingVideo}
                   >
-                    {isExportingVideo ? "✕ Cancelar video" : "🎬 Video"}
+                    {isExportingVideo ? t.episode.cancelVideo : t.episode.video}
                   </Button>
                   <Button
                     variant="ghost"
@@ -1181,7 +1215,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                     onClick={startNewEpisode}
                     disabled={busy || isExportingVideo}
                   >
-                    ✨ Nuevo episodio
+                    {t.episode.newEpisode}
                   </Button>
                 </div>
               )}
@@ -1195,11 +1229,10 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                 className="rounded-2xl border border-pink-200 bg-white p-5 text-center shadow-sm dark:border-pink-900 dark:bg-zinc-900"
               >
                 <h2 className="mb-1 text-lg font-semibold text-zinc-800 dark:text-zinc-100">
-                  ❤️ ¿Te sacó una risa?
+                  {t.sponsor.title}
                 </h2>
                 <p className="mx-auto mb-3 max-w-md text-sm text-zinc-600 dark:text-zinc-300">
-                  Apoya el proyecto en GitHub Sponsors para que sigan saliendo
-                  episodios al aire.
+                  {t.sponsor.text}
                 </p>
                 <a
                   href="https://github.com/sponsors/nivandres"
@@ -1215,7 +1248,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
                   >
                     <path d="M4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.565 20.565 0 0 0 8 13.393a20.561 20.561 0 0 0 3.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.749.749 0 0 1-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5Z" />
                   </svg>
-                  Patrocinar en GitHub Sponsors
+                  {t.sponsor.button}
                 </a>
               </section>
             )}
@@ -1233,10 +1266,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
 
           {/* Footer */}
           <footer className="mt-8 mb-6 flex flex-col items-center gap-1 text-center text-sm text-gray-500 dark:text-zinc-400">
-            <p>
-              ⚠️ Aplicación desarrollada con Vibe Coding (AI) Usa API de Google
-              AI directamente desde el navegador.
-            </p>
+            <p>{t.footer.disclaimer}</p>
             <a
               href="https://github.com/nivandres/the-cv-comedy-podcast"
               target="_blank"
@@ -1251,7 +1281,7 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
               >
                 <path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.606-2.665-.304-5.466-1.334-5.466-5.931 0-1.31.468-2.381 1.236-3.221-.124-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.3 1.23.957-.266 1.984-.399 3.003-.404 1.018.005 2.046.138 3.006.404 2.289-1.552 3.295-1.23 3.295-1.23.653 1.653.242 2.873.119 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.804 5.625-5.475 5.921.43.372.823 1.102.823 2.222 0 1.606-.015 2.898-.015 3.293 0 .322.218.694.825.576C20.565 21.796 24 17.299 24 12c0-6.627-5.373-12-12-12z" />
               </svg>
-              Repositorio en GitHub
+              {t.footer.repo}
             </a>
           </footer>
         </div>
@@ -1259,3 +1289,14 @@ Analiza este CV y crea el libreto del episodio en español, y bastante bastante 
     </>
   );
 }
+
+// El proxy de intl-t resuelve el locale por request (cookie/Accept-Language,
+// o el prefijo /en /pt /fr) y lo entrega en el header x-locale. Aquí cargamos
+// solo el árbol de ese idioma y lo pasamos al provider (prop messages), así el
+// SSR sale traducido y el bundle del cliente no lleva ningún locale.
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const header = req.headers["x-locale"];
+  const locale = isAppLocale(header) ? header : DEFAULT_LOCALE;
+  const messages = await localeLoaders[locale]();
+  return { props: { locale, messages } };
+};

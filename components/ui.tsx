@@ -1,12 +1,20 @@
 // Sistema de diseño de The CV Comedy Podcast: tres niveles de botón,
 // tarjeta única, barra de progreso accesible, alertas con aria-live,
-// spinner único y toggle de tema claro/oscuro.
+// spinner único, toggle de tema y selector de idioma.
 import {
   useState,
   useEffect,
   type ReactNode,
   type ButtonHTMLAttributes,
 } from "react";
+import { useLocale } from "intl-t/react";
+import {
+  LOCALES,
+  LOCALE_NAMES,
+  loadLocale,
+  useTranslation,
+  type AppLocale,
+} from "@/i18n/translation";
 
 const BUTTON_VARIANTS = {
   // Acción principal del paso: púrpura sólido (color original de la app)
@@ -65,9 +73,10 @@ export function StepCard({
   status: StepStatus;
   children: ReactNode;
 }) {
+  const t = useTranslation();
   return (
     <section
-      aria-label={`Paso ${number}: ${title}`}
+      aria-label={String(t.a11y.step({ number, title }))}
       className={`rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm transition-all ${
         status === "active"
           ? "border-purple-200 dark:border-purple-900 shadow-lg shadow-purple-500/10"
@@ -180,14 +189,47 @@ export function useTheme() {
 
 export function ThemeToggle() {
   const { isDark, toggle } = useTheme();
+  const t = useTranslation();
   return (
     <button
       onClick={toggle}
-      aria-label={isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-      title={isDark ? "Tema claro" : "Tema oscuro"}
+      aria-label={String(isDark ? t.theme.toLight : t.theme.toDark)}
+      title={String(isDark ? t.theme.light : t.theme.dark)}
       className="flex h-9 w-9 items-center justify-center rounded-full text-base text-zinc-500 transition-colors hover:bg-purple-100 hover:text-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
     >
       <span aria-hidden="true">{isDark ? "☀️" : "🌙"}</span>
     </button>
+  );
+}
+
+// Selector de idioma: cambio en caliente (sin recargar). setLocale es el del
+// estado del provider (via useLocale por contexto) y dispara onLocaleChange.
+export function LanguageSwitcher() {
+  const { locale, setLocale } = useLocale();
+  const t = useTranslation();
+  const changeLocale = async (next: AppLocale) => {
+    // La cookie `locale` es la que lee el proxy: la próxima visita ya
+    // llega renderizada en este idioma desde el servidor.
+    document.cookie = `locale=${next}; path=/; max-age=31536000; samesite=lax`;
+    // Precarga el chunk del idioma para que el cambio sea instantáneo
+    await loadLocale(next).catch(() => undefined);
+    setLocale(next);
+  };
+  return (
+    <label className="flex items-center gap-1 text-sm">
+      <span aria-hidden="true">🌐</span>
+      <span className="sr-only">{t.language.label}</span>
+      <select
+        value={locale}
+        onChange={(e) => void changeLocale(e.target.value as AppLocale)}
+        className="cursor-pointer rounded-full border-none bg-transparent py-1 pr-1 text-sm text-zinc-600 transition-colors hover:text-purple-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500 dark:text-zinc-300 dark:hover:text-purple-300"
+      >
+        {LOCALES.map((locale) => (
+          <option key={locale} value={locale}>
+            {LOCALE_NAMES[locale]}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

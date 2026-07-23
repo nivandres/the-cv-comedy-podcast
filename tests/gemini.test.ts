@@ -3,7 +3,7 @@ import {
   splitScriptIntoSegments,
   speakerLineRegex,
   callWithFallback,
-  describeApiError,
+  classifyApiError,
   isTransientApiError,
 } from "@/lib/gemini";
 
@@ -83,7 +83,7 @@ describe("splitScriptIntoSegments", () => {
   });
 });
 
-describe("isTransientApiError / describeApiError", () => {
+describe("isTransientApiError / classifyApiError", () => {
   it("clasifica 503 y 429 como transitorios", () => {
     expect(
       isTransientApiError(new Error('{"code":503,"status":"UNAVAILABLE"}'))
@@ -93,18 +93,14 @@ describe("isTransientApiError / describeApiError", () => {
     expect(isTransientApiError(new Error("API key not valid"))).toBe(false);
   });
 
-  it("traduce errores a mensajes accionables", () => {
-    expect(
-      describeApiError(new Error("503 UNAVAILABLE high demand"))
-    ).toContain("saturados");
-    expect(describeApiError(new Error("429 RESOURCE_EXHAUSTED"))).toContain(
-      "cuota"
+  it("clasifica los errores en categorías traducibles", () => {
+    expect(classifyApiError(new Error("503 UNAVAILABLE high demand"))).toBe(
+      "unavailable"
     );
-    expect(describeApiError(new Error("API key not valid"))).toContain(
-      "API Key"
-    );
-    expect(describeApiError(new Error("otra cosa"))).toBe("otra cosa");
-    expect(describeApiError("")).toBe("Error desconocido");
+    expect(classifyApiError(new Error("429 RESOURCE_EXHAUSTED"))).toBe("quota");
+    expect(classifyApiError(new Error("API key not valid"))).toBe("invalidKey");
+    expect(classifyApiError(new Error("otra cosa"))).toBeNull();
+    expect(classifyApiError("")).toBeNull();
   });
 });
 
