@@ -24,7 +24,42 @@ const zhHans = {
     light: "浅色主题",
   },
   language: { label: "语言" },
-  a11y: { step: "第 {number} 步：{title}" },
+  a11y: {
+    step: "第 {number} 步：{title}",
+    skip: "跳到主要内容",
+  },
+  features: {
+    toggle: "这是什么？",
+    heading: "把你的简历变成一期喜剧节目",
+    intro:
+      "The CV Comedy Podcast 会根据你的简历生成一期节目：由两位主持人用高级幽默来点评，台词稿和配音一应俱全。整个过程都在你的浏览器里用 Google Gemini 完成。",
+    items: {
+      formats: {
+        title: "任何格式都行",
+        desc: "上传 PDF、DOCX、TXT 或图片格式的简历；必要时会用 AI OCR 提取其中的文字。",
+      },
+      script: {
+        title: "AI 撰写台词稿",
+        desc: "Gemini 会写出一份既犀利又好笑的台词稿，带着深夜脱口秀的语气。",
+      },
+      voices: {
+        title: "多人配音",
+        desc: "节目由两位嗓音不同的主持人播讲（multi-speaker TTS）。",
+      },
+      streaming: {
+        title: "边生成边收听",
+        desc: "音频会分段送达：无需等到全部完成，就能开始收听。",
+      },
+      download: {
+        title: "下载并分享",
+        desc: "把节目导出为文字、音频（.wav）或视频，一键分享。",
+      },
+      privacy: {
+        title: "从设计上保护隐私",
+        desc: "你的 API Key 和简历都直接从你的浏览器使用，不会经过我们自己的服务器。",
+      },
+    },
+  },
   apikey: {
     title: "你的 API Key",
     inputLabel: "Google AI API Key",

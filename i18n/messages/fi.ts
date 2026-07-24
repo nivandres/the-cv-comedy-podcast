@@ -25,7 +25,42 @@ const fi = {
     light: "Vaalea teema",
   },
   language: { label: "Kieli" },
-  a11y: { step: "Vaihe {number}: {title}" },
+  a11y: {
+    step: "Vaihe {number}: {title}",
+    skip: "Siirry sisältöön",
+  },
+  features: {
+    toggle: "Mikä tämä on?",
+    heading: "Muuta CV:si komediajaksoksi",
+    intro:
+      "The CV Comedy Podcast ottaa ansioluettelosi ja luo jakson, jossa kaksi juontajaa kommentoi sitä älykkäällä huumorilla, käsikirjoitus ja äänet mukaan lukien. Kaikki käsitellään selaimessasi Google Geminillä.",
+    items: {
+      formats: {
+        title: "Mikä tahansa muoto",
+        desc: "Lataa CV:si PDF-, DOCX-, TXT-muodossa tai kuvana; tarvittaessa teksti puretaan tekoäly-OCR:llä.",
+      },
+      script: {
+        title: "Käsikirjoitus tekoälyllä",
+        desc: "Gemini kirjoittaa kriittisen ja hauskan käsikirjoituksen myöhäisillan show'n sävyyn.",
+      },
+      voices: {
+        title: "Useita ääniä",
+        desc: "Jakson lukee kaksi eriäänistä juontajaa (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Kuuntele samalla kun se luodaan",
+        desc: "Ääni saapuu osissa: alat kuunnella odottamatta, että kaikki valmistuu.",
+      },
+      download: {
+        title: "Lataa ja jaa",
+        desc: "Vie jakso tekstinä, äänenä (.wav) tai videona, ja jaa se yhdellä napsautuksella.",
+      },
+      privacy: {
+        title: "Yksityinen lähtökohtaisesti",
+        desc: "API-avaintasi ja CV:täsi käytetään suoraan selaimestasi, ilman että ne kulkevat oman palvelimen kautta.",
+      },
+    },
+  },
   apikey: {
     title: "API-avaimesi",
     inputLabel: "Google AI API-avain",

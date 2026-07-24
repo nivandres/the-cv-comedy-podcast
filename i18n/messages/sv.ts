@@ -26,7 +26,42 @@ const sv = {
     light: "Ljust tema",
   },
   language: { label: "Språk" },
-  a11y: { step: "Steg {number}: {title}" },
+  a11y: {
+    step: "Steg {number}: {title}",
+    skip: "Hoppa till innehållet",
+  },
+  features: {
+    toggle: "Vad är det här?",
+    heading: "Förvandla ditt CV till ett komiskt avsnitt",
+    intro:
+      "The CV Comedy Podcast tar ditt CV och skapar ett avsnitt där två programledare kommenterar det med smart humor, komplett med manus och röster. Allt bearbetas i din webbläsare med Google Gemini.",
+    items: {
+      formats: {
+        title: "Vilket format som helst",
+        desc: "Ladda upp ditt CV som PDF, DOCX, TXT eller bild; vid behov extraheras texten med AI (OCR).",
+      },
+      script: {
+        title: "Manus med AI",
+        desc: "Gemini skriver ett kritiskt och roligt manus, med tonen av en late-night show.",
+      },
+      voices: {
+        title: "Flera röster",
+        desc: "Avsnittet läses upp av två programledare med olika röster (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Lyssna medan det skapas",
+        desc: "Ljudet kommer i delar: du kan börja lyssna utan att vänta på att allt blir klart.",
+      },
+      download: {
+        title: "Ladda ner och dela",
+        desc: "Exportera avsnittet som text, ljud (.wav) eller video, och dela det med ett klick.",
+      },
+      privacy: {
+        title: "Privat i grunden",
+        desc: "Din API-nyckel och ditt CV används direkt från din webbläsare, utan att passera en egen server.",
+      },
+    },
+  },
   apikey: {
     title: "Din API-nyckel",
     inputLabel: "Google AI API-nyckel",

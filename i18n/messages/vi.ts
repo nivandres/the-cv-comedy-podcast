@@ -27,7 +27,42 @@ const vi = {
     light: "Giao diện sáng",
   },
   language: { label: "Ngôn ngữ" },
-  a11y: { step: "Bước {number}: {title}" },
+  a11y: {
+    step: "Bước {number}: {title}",
+    skip: "Chuyển đến nội dung",
+  },
+  features: {
+    toggle: "Đây là gì?",
+    heading: "Biến CV của bạn thành một tập hài kịch",
+    intro:
+      "The CV Comedy Podcast lấy sơ yếu lý lịch của bạn và tạo ra một tập podcast nơi hai người dẫn chương trình bình luận về nó bằng sự hài hước thông minh, kèm cả kịch bản và giọng nói. Mọi thứ được xử lý ngay trên trình duyệt của bạn với Google Gemini.",
+    items: {
+      formats: {
+        title: "Mọi định dạng",
+        desc: "Tải CV của bạn lên dưới dạng PDF, DOCX, TXT hoặc hình ảnh; nếu cần, văn bản sẽ được trích xuất bằng OCR của AI.",
+      },
+      script: {
+        title: "Kịch bản bằng AI",
+        desc: "Gemini viết một kịch bản sắc sảo và vui nhộn, với giọng điệu của một talkshow đêm khuya.",
+      },
+      voices: {
+        title: "Nhiều giọng nói",
+        desc: "Tập podcast được lồng tiếng bởi hai người dẫn chương trình với hai giọng nói khác nhau (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Nghe ngay khi đang tạo",
+        desc: "Âm thanh đến theo từng phần: bạn bắt đầu nghe mà không cần đợi mọi thứ hoàn tất.",
+      },
+      download: {
+        title: "Tải xuống và chia sẻ",
+        desc: "Xuất tập podcast dưới dạng văn bản, âm thanh (.wav) hoặc video, và chia sẻ chỉ với một cú nhấp.",
+      },
+      privacy: {
+        title: "Riêng tư ngay từ thiết kế",
+        desc: "API Key và CV của bạn được dùng trực tiếp từ trình duyệt của bạn, không đi qua bất kỳ máy chủ riêng nào.",
+      },
+    },
+  },
   apikey: {
     title: "API Key của bạn",
     inputLabel: "Google AI API Key",

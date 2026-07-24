@@ -24,7 +24,42 @@ const zhHant = {
     light: "淺色主題",
   },
   language: { label: "語言" },
-  a11y: { step: "步驟 {number}：{title}" },
+  a11y: {
+    step: "步驟 {number}：{title}",
+    skip: "跳至主要內容",
+  },
+  features: {
+    toggle: "這是什麼？",
+    heading: "把你的履歷變成一集喜劇節目",
+    intro:
+      "The CV Comedy Podcast 會根據你的履歷生成一集節目，由兩位主持人以高智商幽默點評，腳本與配音一應俱全。一切都在你的瀏覽器裡透過 Google Gemini 處理。",
+    items: {
+      formats: {
+        title: "任何格式",
+        desc: "以 PDF、DOCX、TXT 或圖片上傳你的履歷；有需要時，會用 AI 的 OCR 擷取文字。",
+      },
+      script: {
+        title: "AI 腳本",
+        desc: "Gemini 會寫出一份尖銳又有趣的腳本，帶著深夜脫口秀的語氣。",
+      },
+      voices: {
+        title: "多重語音",
+        desc: "這集節目由兩位聲音各異的主持人配音（multi-speaker TTS）。",
+      },
+      streaming: {
+        title: "邊生成邊收聽",
+        desc: "音訊會分段送達：不必等全部完成就能開始收聽。",
+      },
+      download: {
+        title: "下載與分享",
+        desc: "把節目匯出成文字、音訊（.wav）或影片，一鍵即可分享。",
+      },
+      privacy: {
+        title: "設計上就重視隱私",
+        desc: "你的 API Key 和履歷都直接在你的瀏覽器裡使用，不會經過我們自己的伺服器。",
+      },
+    },
+  },
   apikey: {
     title: "你的 API Key",
     inputLabel: "Google AI API Key",

@@ -27,7 +27,42 @@ const id = {
     light: "Tema terang",
   },
   language: { label: "Bahasa" },
-  a11y: { step: "Langkah {number}: {title}" },
+  a11y: {
+    step: "Langkah {number}: {title}",
+    skip: "Lompat ke konten",
+  },
+  features: {
+    toggle: "Apa ini?",
+    heading: "Ubah CV kamu jadi episode komedi",
+    intro:
+      "The CV Comedy Podcast mengambil CV kamu dan membuat episode di mana dua pembawa acara mengomentarinya dengan humor cerdas, lengkap dengan naskah dan suaranya. Semuanya diproses di browser kamu dengan Google Gemini.",
+    items: {
+      formats: {
+        title: "Format apa saja",
+        desc: "Unggah CV kamu dalam PDF, DOCX, TXT atau sebagai gambar; kalau perlu, teksnya diekstrak dengan OCR AI.",
+      },
+      script: {
+        title: "Naskah dengan AI",
+        desc: "Gemini menulis naskah yang kritis dan lucu, dengan nada late-night show.",
+      },
+      voices: {
+        title: "Banyak suara",
+        desc: "Episode dibawakan oleh dua pembawa acara dengan suara yang berbeda (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Dengarkan sambil dibuat",
+        desc: "Audio datang bagian demi bagian: kamu bisa mulai mendengarkan tanpa menunggu semuanya selesai.",
+      },
+      download: {
+        title: "Unduh dan bagikan",
+        desc: "Ekspor episode sebagai teks, audio (.wav) atau video, dan bagikan hanya dengan sekali klik.",
+      },
+      privacy: {
+        title: "Privat sejak awal",
+        desc: "API Key dan CV kamu dipakai langsung dari browser kamu, tanpa melewati server milik kami sendiri.",
+      },
+    },
+  },
   apikey: {
     title: "API Key kamu",
     inputLabel: "Google AI API Key",

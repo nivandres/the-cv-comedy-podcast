@@ -27,7 +27,42 @@ const de = {
     light: "Helles Design",
   },
   language: { label: "Sprache" },
-  a11y: { step: "Schritt {number}: {title}" },
+  a11y: {
+    step: "Schritt {number}: {title}",
+    skip: "Zum Inhalt springen",
+  },
+  features: {
+    toggle: "Was ist das?",
+    heading: "Verwandle deinen Lebenslauf in eine Comedy-Episode",
+    intro:
+      "The CV Comedy Podcast nimmt deinen Lebenslauf und erstellt eine Episode, in der zwei Moderatoren ihn mit intelligentem Humor kommentieren – inklusive Skript und Stimmen. Alles wird in deinem Browser mit Google Gemini verarbeitet.",
+    items: {
+      formats: {
+        title: "Jedes Format",
+        desc: "Lade deinen Lebenslauf als PDF, DOCX, TXT oder Bild hoch; falls nötig, wird der Text per KI-OCR extrahiert.",
+      },
+      script: {
+        title: "Skript mit KI",
+        desc: "Gemini schreibt ein kritisches und witziges Skript im Ton einer Late-Night-Show.",
+      },
+      voices: {
+        title: "Mehrere Stimmen",
+        desc: "Die Episode wird von zwei Moderatoren mit unterschiedlichen Stimmen gesprochen (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Hör zu, während sie entsteht",
+        desc: "Das Audio kommt in Teilen: Du fängst schon an zu hören, ohne zu warten, bis alles fertig ist.",
+      },
+      download: {
+        title: "Herunterladen und teilen",
+        desc: "Exportiere die Episode als Text, Audio (.wav) oder Video und teile sie mit einem Klick.",
+      },
+      privacy: {
+        title: "Privat durch Design",
+        desc: "Dein API-Key und dein Lebenslauf werden direkt aus deinem Browser verwendet, ohne über einen eigenen Server zu laufen.",
+      },
+    },
+  },
   apikey: {
     title: "Dein API-Key",
     inputLabel: "Google AI API-Key",

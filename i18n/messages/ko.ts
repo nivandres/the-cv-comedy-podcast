@@ -26,7 +26,42 @@ const ko = {
     light: "라이트 모드",
   },
   language: { label: "언어" },
-  a11y: { step: "{number}단계: {title}" },
+  a11y: {
+    step: "{number}단계: {title}",
+    skip: "본문 바로가기",
+  },
+  features: {
+    toggle: "이게 뭔가요?",
+    heading: "이력서를 코미디 에피소드로 바꿔보세요",
+    intro:
+      "The CV Comedy Podcast는 당신의 이력서를 받아 두 진행자가 위트 있는 유머로 이야기를 나누는 에피소드를 만듭니다. 대본과 목소리까지 모두 포함됩니다. 모든 과정은 Google Gemini를 사용해 브라우저에서 처리됩니다.",
+    items: {
+      formats: {
+        title: "어떤 형식이든",
+        desc: "PDF, DOCX, TXT 또는 이미지로 이력서를 업로드하세요. 필요하면 AI OCR로 텍스트를 추출합니다.",
+      },
+      script: {
+        title: "AI 대본",
+        desc: "Gemini가 심야 쇼 톤으로 신랄하면서도 재미있는 대본을 씁니다.",
+      },
+      voices: {
+        title: "여러 목소리",
+        desc: "서로 다른 목소리를 가진 두 진행자가 에피소드를 진행합니다 (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "생성되는 동안 바로 듣기",
+        desc: "오디오가 파트별로 전달되어, 전체가 끝날 때까지 기다리지 않고 바로 듣기 시작할 수 있습니다.",
+      },
+      download: {
+        title: "다운로드하고 공유하기",
+        desc: "에피소드를 텍스트, 오디오(.wav), 동영상으로 내보내고 클릭 한 번으로 공유하세요.",
+      },
+      privacy: {
+        title: "기본이 프라이버시",
+        desc: "API 키와 이력서는 브라우저에서 바로 사용되며, 자체 서버를 거치지 않습니다.",
+      },
+    },
+  },
   apikey: {
     title: "API 키",
     inputLabel: "Google AI API 키",

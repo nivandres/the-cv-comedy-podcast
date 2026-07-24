@@ -10,7 +10,7 @@ Visita la página web de The CV Comedy Podcast en https://the-cv-comedy-podcast.
 
 El flujo es un **wizard de 3 pasos** (API Key → Tu CV → Tu episodio):
 
-- **`pages/index.tsx`** — orquesta todo el flujo (extracción, libreto, TTS, exportación, compartir).
+- **`pages/[locale]/index.tsx`** — orquesta todo el flujo (extracción, libreto, TTS, exportación, compartir). Cada idioma se **pre-genera como página estática con ISR** (`getStaticPaths` + `getStaticProps` con `revalidate`).
 - **`lib/`** — lógica pura sin React, cubierta por tests (Vitest):
   - `gemini.ts`: modelos, reintentos con fallback (429/503) y segmentación del libreto.
   - `audio.ts`: PCM→WAV, visualizador y exportación de video con `MediaRecorder`.
@@ -32,7 +32,8 @@ El flujo es un **wizard de 3 pasos** (API Key → Tu CV → Tu episodio):
 - Puedes **descargar el episodio** como libreto (.txt), audio (.wav) o **video** (portada + visualizador, .mp4/.webm), y **compartirlo** con la Web Share API.
 - **Tema claro/oscuro** y modo dev (`?dev=1`) con datos de prueba.
 - **Multi-idioma (31 idiomas)** con [intl-t](https://intl-t.dev): árabe, búlgaro, checo, alemán, griego, inglés, español, persa, finés, filipino, francés, hebreo, hindi, croata, indonesio, italiano, japonés, coreano, malayo, noruego, polaco, portugués, rumano, ruso, albanés, sueco, tailandés, turco, vietnamita, chino simplificado y tradicional. La raíz `/` sirve el idioma detectado por cookie/`Accept-Language` (misma URL para todos), el SSR sale traducido, el selector cambia de idioma **en caliente sin recargar**, y cada idioma —prompts de generación incluidos— llega en su propio chunk bajo demanda. Árabe, hebreo y persa se sirven en **RTL** (`dir`).
-- **SEO i18n**: cada idioma tiene una **URL canónica crawlable** (`/es`, `/en`, `/ja`, …) servida sin redirect; el `<head>` emite `hreflang` para los 31 idiomas + `x-default`, `canonical`, `og:locale`/`og:locale:alternate` y **JSON-LD** (`WebApplication`); hay **`sitemap.xml`** con alternantes por idioma y **`robots.txt`**.
+- **SEO i18n**: cada idioma se **pre-renderiza estático (ISR)** con una **URL canónica crawlable** (`/es`, `/en`, `/ja`, …) servida sin redirect; el `<head>` emite `hreflang` para los 31 idiomas + `x-default`, `canonical`, `robots`, `og:locale`/`og:locale:alternate` y **JSON-LD** (`@graph` con `WebSite` + `WebApplication` con `featureList`); hay **`sitemap.xml`** con alternantes por idioma y **`robots.txt`**. Un **collapsible** discreto (`<details>`) añade contenido explicativo indexable y localizado.
+- **Accesibilidad**: HTML semántico (`header`/`main`/`footer`/`section`, `dl`/`dt`/`dd`), skip link, landmarks y roles ARIA, `lang`/`dir` correctos por idioma (incl. RTL), y `aria-live` en el progreso.
 - Si te gusta, puedes apoyar el proyecto vía [GitHub Sponsors](https://github.com/sponsors/nivandres).
 
 ## ¿Por qué es especial?

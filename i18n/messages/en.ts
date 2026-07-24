@@ -26,7 +26,42 @@ const en = {
     light: "Light theme",
   },
   language: { label: "Language" },
-  a11y: { step: "Step {number}: {title}" },
+  a11y: {
+    step: "Step {number}: {title}",
+    skip: "Skip to content",
+  },
+  features: {
+    toggle: "What is this?",
+    heading: "Turn your resume into a comedy episode",
+    intro:
+      "The CV Comedy Podcast takes your resume and generates an episode where two hosts riff on it with smart humor, script and voices included. Everything is processed in your browser with Google Gemini.",
+    items: {
+      formats: {
+        title: "Any format",
+        desc: "Upload your resume as PDF, DOCX, TXT or an image; if needed, the text is extracted with AI OCR.",
+      },
+      script: {
+        title: "AI-written script",
+        desc: "Gemini writes a sharp, funny script with the tone of a late-night show.",
+      },
+      voices: {
+        title: "Multiple voices",
+        desc: "The episode is voiced by two hosts with distinct voices (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Listen as it's generated",
+        desc: "The audio arrives in parts: you start listening without waiting for the whole thing to finish.",
+      },
+      download: {
+        title: "Download and share",
+        desc: "Export the episode as text, audio (.wav) or video, and share it in one click.",
+      },
+      privacy: {
+        title: "Private by design",
+        desc: "Your API Key and your resume are used directly from your browser, without going through a server of our own.",
+      },
+    },
+  },
   apikey: {
     title: "Your API Key",
     inputLabel: "Google AI API Key",

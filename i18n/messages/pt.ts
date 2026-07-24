@@ -28,7 +28,42 @@ const pt = {
     light: "Tema claro",
   },
   language: { label: "Idioma" },
-  a11y: { step: "Passo {number}: {title}" },
+  a11y: {
+    step: "Passo {number}: {title}",
+    skip: "Pular para o conteúdo",
+  },
+  features: {
+    toggle: "O que é isso?",
+    heading: "Transforme seu currículo em um episódio de comédia",
+    intro:
+      "O The CV Comedy Podcast pega o seu currículo e gera um episódio em que dois apresentadores o comentam com humor inteligente, com roteiro e vozes incluídos. Tudo é processado no seu navegador com o Google Gemini.",
+    items: {
+      formats: {
+        title: "Qualquer formato",
+        desc: "Envie seu currículo em PDF, DOCX, TXT ou como imagem; se necessário, o texto é extraído com OCR de IA.",
+      },
+      script: {
+        title: "Roteiro com IA",
+        desc: "O Gemini escreve um roteiro crítico e divertido, com o tom de um late-night show.",
+      },
+      voices: {
+        title: "Vozes múltiplas",
+        desc: "O episódio é narrado por dois apresentadores com vozes distintas (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Ouça enquanto é gerado",
+        desc: "O áudio chega em partes: você começa a ouvir sem esperar tudo terminar.",
+      },
+      download: {
+        title: "Baixe e compartilhe",
+        desc: "Exporte o episódio como texto, áudio (.wav) ou vídeo, e compartilhe com um clique.",
+      },
+      privacy: {
+        title: "Privado por design",
+        desc: "Sua API Key e seu currículo são usados diretamente do seu navegador, sem passar por um servidor próprio.",
+      },
+    },
+  },
   apikey: {
     title: "Sua API Key",
     inputLabel: "Google AI API Key",

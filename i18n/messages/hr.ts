@@ -26,7 +26,42 @@ const hr = {
     light: "Svijetla tema",
   },
   language: { label: "Jezik" },
-  a11y: { step: "Korak {number}: {title}" },
+  a11y: {
+    step: "Korak {number}: {title}",
+    skip: "Preskoči na sadržaj",
+  },
+  features: {
+    toggle: "Što je ovo?",
+    heading: "Pretvori svoj životopis u epizodu komedije",
+    intro:
+      "The CV Comedy Podcast uzima tvoj životopis i generira epizodu u kojoj ga dva voditelja komentiraju s pametnim humorom, uključujući scenarij i glasove. Sve se obrađuje u tvojem pregledniku pomoću Google Geminija.",
+    items: {
+      formats: {
+        title: "Bilo koji format",
+        desc: "Učitaj svoj životopis u PDF, DOCX, TXT ili kao sliku; ako je potrebno, tekst se izdvaja pomoću AI OCR-a.",
+      },
+      script: {
+        title: "Scenarij uz AI",
+        desc: "Gemini piše kritičan i zabavan scenarij, s tonom late-night showa.",
+      },
+      voices: {
+        title: "Višestruki glasovi",
+        desc: "Epizodu izvode dva voditelja s različitim glasovima (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Slušaj dok se generira",
+        desc: "Zvuk stiže u dijelovima: počinješ slušati bez čekanja da sve završi.",
+      },
+      download: {
+        title: "Preuzmi i podijeli",
+        desc: "Izvezi epizodu kao tekst, zvuk (.wav) ili videozapis i podijeli je jednim klikom.",
+      },
+      privacy: {
+        title: "Privatno po dizajnu",
+        desc: "Tvoj API ključ i tvoj životopis koriste se izravno iz tvojeg preglednika, bez prolaska kroz vlastiti poslužitelj.",
+      },
+    },
+  },
   apikey: {
     title: "Tvoj API ključ",
     inputLabel: "Google AI API ključ",

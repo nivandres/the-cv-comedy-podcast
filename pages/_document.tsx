@@ -34,7 +34,13 @@ export default function MyDocument({ locale }: Props) {
 
 MyDocument.getInitialProps = async (ctx: DocumentContext): Promise<Props> => {
   const initialProps = await Document.getInitialProps(ctx);
-  const header = ctx.req?.headers["x-locale"];
-  const locale: AppLocale = isAppLocale(header) ? header : DEFAULT_LOCALE;
+  // Con páginas [locale] pre-generadas, el idioma viene del parámetro de ruta
+  // (disponible en build para cada página estática). El header x-locale sirve
+  // de respaldo para renders dinámicos.
+  const fromParam = ctx.query?.locale;
+  const raw =
+    (Array.isArray(fromParam) ? fromParam[0] : fromParam) ??
+    ctx.req?.headers["x-locale"];
+  const locale: AppLocale = isAppLocale(raw) ? raw : DEFAULT_LOCALE;
   return { ...initialProps, locale };
 };

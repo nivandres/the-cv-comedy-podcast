@@ -27,7 +27,42 @@ const fil = {
     light: "Maliwanag na tema",
   },
   language: { label: "Wika" },
-  a11y: { step: "Hakbang {number}: {title}" },
+  a11y: {
+    step: "Hakbang {number}: {title}",
+    skip: "Lumaktaw sa nilalaman",
+  },
+  features: {
+    toggle: "Ano ito?",
+    heading: "Gawing episode ng komedya ang iyong CV",
+    intro:
+      "Kinukuha ng The CV Comedy Podcast ang iyong résumé at gumagawa ng episode kung saan pinag-uusapan ito ng dalawang host nang may matalinong katatawanan, kasama ang iskrip at mga boses. Ang lahat ay pinoproseso sa iyong browser gamit ang Google Gemini.",
+    items: {
+      formats: {
+        title: "Anumang format",
+        desc: "I-upload ang iyong CV bilang PDF, DOCX, TXT o larawan; kung kailangan, kukunin ang teksto gamit ang OCR ng AI.",
+      },
+      script: {
+        title: "Iskrip gamit ang AI",
+        desc: "Sumusulat ang Gemini ng kritikal at nakakatawang iskrip, na may tono ng isang late-night show.",
+      },
+      voices: {
+        title: "Maraming boses",
+        desc: "Binibigkas ang episode ng dalawang host na magkaibang boses (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Makinig habang ginagawa",
+        desc: "Dumarating ang audio nang bahagi-bahagi: makikinig ka na agad nang hindi hinihintay matapos ang lahat.",
+      },
+      download: {
+        title: "I-download at ibahagi",
+        desc: "I-export ang episode bilang teksto, audio (.wav) o video, at ibahagi ito sa isang click.",
+      },
+      privacy: {
+        title: "Pribado ayon sa disenyo",
+        desc: "Direktang ginagamit ang iyong API Key at CV mula sa iyong browser, nang hindi dumadaan sa sariling server.",
+      },
+    },
+  },
   apikey: {
     title: "Ang iyong API Key",
     inputLabel: "Google AI API Key",

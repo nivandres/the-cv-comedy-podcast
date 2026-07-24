@@ -26,7 +26,42 @@ const pl = {
     light: "Tryb jasny",
   },
   language: { label: "Język" },
-  a11y: { step: "Krok {number}: {title}" },
+  a11y: {
+    step: "Krok {number}: {title}",
+    skip: "Przejdź do treści",
+  },
+  features: {
+    toggle: "Co to jest?",
+    heading: "Zamień swoje CV w odcinek komediowy",
+    intro:
+      "The CV Comedy Podcast bierze Twoje CV i generuje odcinek, w którym dwóch prowadzących komentuje je z inteligentnym humorem — wraz ze scenariuszem i głosami. Wszystko przetwarzane jest w Twojej przeglądarce dzięki Google Gemini.",
+    items: {
+      formats: {
+        title: "Dowolny format",
+        desc: "Wgraj swoje CV w formacie PDF, DOCX, TXT lub jako obraz; w razie potrzeby tekst zostanie wyodrębniony za pomocą OCR z AI.",
+      },
+      script: {
+        title: "Scenariusz od AI",
+        desc: "Gemini pisze krytyczny i zabawny scenariusz w tonie late-night show.",
+      },
+      voices: {
+        title: "Wiele głosów",
+        desc: "Odcinek czytają dwaj prowadzący o różnych głosach (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Słuchaj podczas generowania",
+        desc: "Audio pojawia się częściami: zaczynasz słuchać, nie czekając, aż wszystko się skończy.",
+      },
+      download: {
+        title: "Pobierz i udostępnij",
+        desc: "Wyeksportuj odcinek jako tekst, audio (.wav) lub wideo i udostępnij go jednym kliknięciem.",
+      },
+      privacy: {
+        title: "Prywatny z założenia",
+        desc: "Twój klucz API i Twoje CV są używane bezpośrednio z Twojej przeglądarki, bez pośrednictwa własnego serwera.",
+      },
+    },
+  },
   apikey: {
     title: "Twój klucz API",
     inputLabel: "Klucz API Google AI",

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Head from "next/head";
-import type { GetServerSideProps } from "next";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import type { Part } from "@google/genai";
 import {
   pcmToWav,
@@ -825,16 +825,39 @@ export default function TheCVComedyPodcast() {
   // (todas las URLs por locale + x-default → la raíz) van en el <Head>.
   const canonical = localeUrl(locale);
   const ogImage = `${APP_URL}cover-og.jpg`;
+  // Items de features (contenido explicativo + featureList del schema)
+  const featureItems = [
+    t.features.items.formats,
+    t.features.items.script,
+    t.features.items.voices,
+    t.features.items.streaming,
+    t.features.items.download,
+    t.features.items.privacy,
+  ];
   const jsonLd = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: "The CV Comedy Podcast",
-    url: SITE_URL,
-    applicationCategory: "MultimediaApplication",
-    operatingSystem: "Web",
-    inLanguage: [...LOCALES],
-    description: String(t.meta.description),
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: "The CV Comedy Podcast",
+        inLanguage: [...LOCALES],
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${SITE_URL}/#app`,
+        name: "The CV Comedy Podcast",
+        url: SITE_URL,
+        applicationCategory: "MultimediaApplication",
+        operatingSystem: "Web",
+        inLanguage: [...LOCALES],
+        description: String(t.meta.description),
+        featureList: featureItems.map((item) => String(item.title)),
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+      },
+    ],
   });
 
   return (
@@ -843,6 +866,10 @@ export default function TheCVComedyPodcast() {
         <title>{String(t.meta.title)}</title>
         <meta name="description" content={String(t.meta.description)} />
         <meta name="keywords" content={String(t.meta.keywords)} />
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        />
         <link rel="canonical" href={canonical} />
         {/* Alternantes por idioma (crawlables) + x-default = raíz que negocia */}
         <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}/`} />
@@ -860,6 +887,9 @@ export default function TheCVComedyPodcast() {
           content={String(t.meta.ogDescription)}
         />
         <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1024" />
+        <meta property="og:image:height" content="1024" />
+        <meta property="og:image:alt" content="The CV Comedy Podcast" />
         <meta property="og:url" content={canonical} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="The CV Comedy Podcast" />
@@ -878,6 +908,7 @@ export default function TheCVComedyPodcast() {
           content={String(t.meta.ogDescription)}
         />
         <meta name="twitter:image" content={ogImage} />
+        <meta name="twitter:image:alt" content="The CV Comedy Podcast" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd }}
@@ -885,6 +916,13 @@ export default function TheCVComedyPodcast() {
       </Head>
       <div className="min-h-screen bg-linear-to-br from-purple-50 to-blue-50 px-4 py-3 transition-colors sm:py-4 dark:from-zinc-950 dark:to-zinc-900">
         <div className="mx-auto max-w-3xl">
+          {/* Skip link: primer elemento enfocable, visible solo al recibir foco */}
+          <a
+            href="#main"
+            className="sr-only rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50"
+          >
+            {t.a11y.skip}
+          </a>
           {/* Header: el toggle va en flujo normal (nunca se superpone) */}
           <header className="mb-8">
             <div className="flex items-center justify-end gap-2">
@@ -893,26 +931,69 @@ export default function TheCVComedyPodcast() {
             </div>
             <div className="mt-1 text-center sm:mt-0">
               <h1 className="mb-2 text-3xl font-bold text-gray-800 sm:text-4xl dark:text-zinc-100">
-                🎙️ The CV Comedy Podcast
+                <span aria-hidden="true">🎙️</span> The CV Comedy Podcast
               </h1>
               <p className="mb-4 text-base text-zinc-600 sm:text-lg dark:text-zinc-300">
                 {t.header.tagline}
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-medium">
-              <span className="rounded-full bg-green-100 px-3 py-1 text-green-800 dark:bg-green-950 dark:text-green-300">
-                {t.header.badges.tts}
-              </span>
-              <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                {t.header.badges.gemini}
-              </span>
-              <span className="rounded-full bg-purple-100 px-3 py-1 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
-                {t.header.badges.humor}
-              </span>
-            </div>
+            {/* Los badges SON el disparador (details/summary nativo y accesible):
+                al hacer click se despliega debajo, discreto, el contenido
+                explicativo — que va SIEMPRE en el DOM (indexable) aunque cerrado.
+                Un chevron tenue insinúa que es expandible; la pista textual
+                queda solo para lectores de pantalla (sr-only). */}
+            <details className="group">
+              <summary className="mx-auto flex w-fit cursor-pointer list-none flex-wrap items-center justify-center gap-2 rounded-full text-xs font-medium select-none marker:content-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-purple-500 [&::-webkit-details-marker]:hidden">
+                <span className="sr-only">{t.features.toggle}</span>
+                <span className="rounded-full bg-green-100 px-3 py-1 text-green-800 dark:bg-green-950 dark:text-green-300">
+                  {t.header.badges.tts}
+                </span>
+                <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                  {t.header.badges.gemini}
+                </span>
+                <span className="rounded-full bg-purple-100 px-3 py-1 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                  {t.header.badges.humor}
+                </span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-transform group-open:rotate-180 dark:text-zinc-600"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </summary>
+              <div className="mx-auto mt-4 max-w-xl border-t border-zinc-200/70 pt-4 text-start dark:border-zinc-800/60">
+                <h2
+                  id="features-heading"
+                  className="text-sm font-semibold text-zinc-700 dark:text-zinc-200"
+                >
+                  {t.features.heading}
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  {t.features.intro}
+                </p>
+                <dl className="mt-3 grid gap-x-5 gap-y-3 sm:grid-cols-2">
+                  {featureItems.map((item, i) => (
+                    <div key={i}>
+                      <dt className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+                        {item.title}
+                      </dt>
+                      <dd className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {item.desc}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </details>
           </header>
 
-          <div className="flex flex-col gap-4">
+          <main id="main" className="flex flex-col gap-4">
             {/* Paso 1: API Key */}
             <StepCard
               number={1}
@@ -1225,10 +1306,13 @@ export default function TheCVComedyPodcast() {
             {/* Apoyo: GitHub Sponsors */}
             {audioReady && (
               <section
-                aria-label="Apoya el proyecto"
+                aria-labelledby="sponsor-heading"
                 className="rounded-2xl border border-pink-200 bg-white p-5 text-center shadow-sm dark:border-pink-900 dark:bg-zinc-900"
               >
-                <h2 className="mb-1 text-lg font-semibold text-zinc-800 dark:text-zinc-100">
+                <h2
+                  id="sponsor-heading"
+                  className="mb-1 text-lg font-semibold text-zinc-800 dark:text-zinc-100"
+                >
                   {t.sponsor.title}
                 </h2>
                 <p className="mx-auto mb-3 max-w-md text-sm text-zinc-600 dark:text-zinc-300">
@@ -1262,7 +1346,7 @@ export default function TheCVComedyPodcast() {
                 ))}
               </div>
             )}
-          </div>
+          </main>
 
           {/* Footer */}
           <footer className="mt-8 mb-6 flex flex-col items-center gap-1 text-center text-sm text-gray-500 dark:text-zinc-400">
@@ -1290,13 +1374,19 @@ export default function TheCVComedyPodcast() {
   );
 }
 
-// El proxy de intl-t resuelve el locale por request (cookie/Accept-Language,
-// o el prefijo /en /pt /fr) y lo entrega en el header x-locale. Aquí cargamos
-// solo el árbol de ese idioma y lo pasamos al provider (prop messages), así el
-// SSR sale traducido y el bundle del cliente no lleva ningún locale.
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const header = req.headers["x-locale"];
-  const locale = isAppLocale(header) ? header : DEFAULT_LOCALE;
+// Cada idioma se PRE-GENERA como página estática (ISR): el proxy de intl-t
+// (strategy "param") rutea la raíz "/" al idioma detectado por cookie y sirve
+// /es /en /ja … como URLs canónicas crawlables, todas servidas desde HTML
+// estático (TTFB mínimo, mejor Core Web Vitals) y revalidadas periódicamente.
+export const getStaticPaths: GetStaticPaths = async () => ({
+  paths: LOCALES.map((locale) => ({ params: { locale } })),
+  fallback: false,
+});
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const raw = params?.locale;
+  const locale = isAppLocale(raw) ? raw : DEFAULT_LOCALE;
   const messages = await localeLoaders[locale]();
-  return { props: { locale, messages } };
+  // revalidate: el contenido es estático, pero ISR mantiene las páginas frescas
+  return { props: { locale, messages }, revalidate: 3600 };
 };

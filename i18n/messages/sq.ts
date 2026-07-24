@@ -27,7 +27,42 @@ const sq = {
     light: "Tema e çelët",
   },
   language: { label: "Gjuha" },
-  a11y: { step: "Hapi {number}: {title}" },
+  a11y: {
+    step: "Hapi {number}: {title}",
+    skip: "Kalo te përmbajtja",
+  },
+  features: {
+    toggle: "Çfarë është kjo?",
+    heading: "Kthe CV-në tënde në një episod komedie",
+    intro:
+      "The CV Comedy Podcast merr kurrikulumin tënd dhe krijon një episod ku dy prezantues e komentojnë me humor inteligjent, me skenar dhe zëra të përfshirë. Gjithçka përpunohet në shfletuesin tënd me Google Gemini.",
+    items: {
+      formats: {
+        title: "Çfarëdo formati",
+        desc: "Ngarko CV-në tënde në PDF, DOCX, TXT ose si imazh; nëse duhet, teksti nxirret me OCR të IA-s.",
+      },
+      script: {
+        title: "Skenar me IA",
+        desc: "Gemini shkruan një skenar kritik dhe argëtues, me tonin e një late-night show.",
+      },
+      voices: {
+        title: "Zëra të shumtë",
+        desc: "Episodi zërohet nga dy prezantues me zëra të ndryshëm (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Dëgjo ndërsa krijohet",
+        desc: "Audioja vjen me pjesë: fillon të dëgjosh pa pritur që të mbarojë gjithçka.",
+      },
+      download: {
+        title: "Shkarko dhe shpërnda",
+        desc: "Eksporto episodin si tekst, audio (.wav) ose video, dhe shpërndaje me një klik.",
+      },
+      privacy: {
+        title: "Privat nga dizajni",
+        desc: "API Key-i yt dhe CV-ja jote përdoren direkt nga shfletuesi yt, pa kaluar nëpër një server tonin.",
+      },
+    },
+  },
   apikey: {
     title: "API Key-i yt",
     inputLabel: "Google AI API Key",

@@ -27,7 +27,42 @@ const ro = {
     light: "Temă luminoasă",
   },
   language: { label: "Limbă" },
-  a11y: { step: "Pasul {number}: {title}" },
+  a11y: {
+    step: "Pasul {number}: {title}",
+    skip: "Sari la conținut",
+  },
+  features: {
+    toggle: "Ce este asta?",
+    heading: "Transformă-ți CV-ul într-un episod de comedie",
+    intro:
+      "The CV Comedy Podcast îți ia CV-ul și generează un episod în care doi prezentatori îl comentează cu umor inteligent, cu scenariu și voci incluse. Totul se procesează în browserul tău cu Google Gemini.",
+    items: {
+      formats: {
+        title: "Orice format",
+        desc: "Încarcă-ți CV-ul în PDF, DOCX, TXT sau ca imagine; dacă e nevoie, textul se extrage cu OCR bazat pe IA.",
+      },
+      script: {
+        title: "Scenariu cu IA",
+        desc: "Gemini scrie un scenariu critic și amuzant, cu tonul unui late-night show.",
+      },
+      voices: {
+        title: "Voci multiple",
+        desc: "Episodul este narat de doi prezentatori cu voci diferite (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Ascultă în timp ce se generează",
+        desc: "Audio-ul vine pe părți: începi să asculți fără să aștepți să se termine totul.",
+      },
+      download: {
+        title: "Descarcă și distribuie",
+        desc: "Exportă episodul ca text, audio (.wav) sau video și distribuie-l dintr-un clic.",
+      },
+      privacy: {
+        title: "Privat prin design",
+        desc: "Cheia ta API și CV-ul tău sunt folosite direct din browserul tău, fără a trece printr-un server propriu.",
+      },
+    },
+  },
   apikey: {
     title: "Cheia ta API",
     inputLabel: "Google AI API Key",

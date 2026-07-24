@@ -26,7 +26,42 @@ const tr = {
     light: "Açık tema",
   },
   language: { label: "Dil" },
-  a11y: { step: "Adım {number}: {title}" },
+  a11y: {
+    step: "Adım {number}: {title}",
+    skip: "İçeriğe atla",
+  },
+  features: {
+    toggle: "Bu ne?",
+    heading: "CV'ini bir komedi bölümüne dönüştür",
+    intro:
+      "The CV Comedy Podcast, özgeçmişini alıp iki sunucunun onu zekice bir mizahla yorumladığı bir bölüm oluşturur; senaryo ve sesler dahildir. Her şey tarayıcında Google Gemini ile işlenir.",
+    items: {
+      formats: {
+        title: "Her türlü format",
+        desc: "CV'ini PDF, DOCX, TXT ya da görsel olarak yükle; gerekirse metin, yapay zeka OCR'ıyla çıkarılır.",
+      },
+      script: {
+        title: "Yapay zeka senaryosu",
+        desc: "Gemini, bir gece kuşağı programının tonuyla eleştirel ve eğlenceli bir senaryo yazar.",
+      },
+      voices: {
+        title: "Birden fazla ses",
+        desc: "Bölüm, farklı seslere sahip iki sunucu tarafından seslendirilir (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Oluşturulurken dinle",
+        desc: "Ses parça parça gelir: her şeyin bitmesini beklemeden dinlemeye başlarsın.",
+      },
+      download: {
+        title: "İndir ve paylaş",
+        desc: "Bölümü metin, ses (.wav) ya da video olarak dışa aktar ve tek tıkla paylaş.",
+      },
+      privacy: {
+        title: "Tasarımı gereği gizli",
+        desc: "API Anahtarın ve CV'in doğrudan tarayıcından kullanılır, kendi sunucumuza hiç uğramadan.",
+      },
+    },
+  },
   apikey: {
     title: "API Anahtarın",
     inputLabel: "Google AI API Anahtarı",

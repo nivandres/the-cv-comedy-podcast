@@ -26,7 +26,42 @@ const cs = {
     light: "Světlý motiv",
   },
   language: { label: "Jazyk" },
-  a11y: { step: "Krok {number}: {title}" },
+  a11y: {
+    step: "Krok {number}: {title}",
+    skip: "Přeskočit na obsah",
+  },
+  features: {
+    toggle: "Co to je?",
+    heading: "Proměňte svůj životopis v komediální díl",
+    intro:
+      "The CV Comedy Podcast vezme váš životopis a vytvoří díl, ve kterém ho dva moderátoři komentují s chytrým humorem, včetně scénáře a hlasů. Vše se zpracovává ve vašem prohlížeči pomocí Google Gemini.",
+    items: {
+      formats: {
+        title: "Jakýkoli formát",
+        desc: "Nahrajte svůj životopis ve formátu PDF, DOCX, TXT nebo jako obrázek; pokud je potřeba, text se získá pomocí OCR s AI.",
+      },
+      script: {
+        title: "Scénář s AI",
+        desc: "Gemini napíše kritický a vtipný scénář v tónu late-night show.",
+      },
+      voices: {
+        title: "Více hlasů",
+        desc: "Díl je namluven dvěma moderátory s odlišnými hlasy (multi-speaker TTS).",
+      },
+      streaming: {
+        title: "Poslouchejte během generování",
+        desc: "Audio přichází po částech: začnete poslouchat, aniž byste čekali na dokončení všeho.",
+      },
+      download: {
+        title: "Stáhněte a sdílejte",
+        desc: "Exportujte díl jako text, audio (.wav) nebo video a sdílejte ho jedním kliknutím.",
+      },
+      privacy: {
+        title: "Soukromé už z principu",
+        desc: "Váš API klíč a váš životopis se používají přímo z vašeho prohlížeče, aniž by procházely přes vlastní server.",
+      },
+    },
+  },
   apikey: {
     title: "Váš API klíč",
     inputLabel: "Google AI API klíč",

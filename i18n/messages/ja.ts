@@ -26,7 +26,42 @@ const ja = {
     light: "ライトテーマ",
   },
   language: { label: "言語" },
-  a11y: { step: "ステップ{number}: {title}" },
+  a11y: {
+    step: "ステップ{number}: {title}",
+    skip: "コンテンツにスキップ",
+  },
+  features: {
+    toggle: "これは何？",
+    heading: "あなたの履歴書をお笑いエピソードに変換",
+    intro:
+      "The CV Comedy Podcastは、あなたの履歴書をもとに、2人の司会者が知的なユーモアで語り合うエピソードを、台本も音声も込みで生成します。処理はすべてGoogle Geminiを使ってブラウザ内で行われます。",
+    items: {
+      formats: {
+        title: "どんな形式でも",
+        desc: "履歴書をPDF、DOCX、TXT、または画像でアップロード。必要ならAIのOCRでテキストを抽出します。",
+      },
+      script: {
+        title: "AIによる台本",
+        desc: "Geminiが、深夜番組のトーンで辛口かつ愉快な台本を書き上げます。",
+      },
+      voices: {
+        title: "複数の声",
+        desc: "エピソードは、声の異なる2人の司会者で読み上げられます（multi-speaker TTS）。",
+      },
+      streaming: {
+        title: "生成しながら聴ける",
+        desc: "音声はパートごとに届くので、すべてが終わるのを待たずに聴き始められます。",
+      },
+      download: {
+        title: "ダウンロードしてシェア",
+        desc: "エピソードをテキスト、音声（.wav）、動画として書き出し、ワンクリックでシェアできます。",
+      },
+      privacy: {
+        title: "はじめからプライベート",
+        desc: "APIキーも履歴書も、あなたのブラウザから直接使われ、こちら側のサーバーを経由しません。",
+      },
+    },
+  },
   apikey: {
     title: "あなたのAPIキー",
     inputLabel: "Google AI APIキー",
